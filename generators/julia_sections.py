@@ -122,7 +122,9 @@ def write_initialization(file, data: TranslationData) -> None:
 
 def write_parameter_initialization(file, data: TranslationData) -> None:
     write_section_header(file, "Parameter Initialization")
-    n_p = max(int(re.search(r"\d+", v).group(0)) for v in data.parameter_callbacks.values())
+    n_p = max(
+        int(re.search(r"\d+", v).group(0)) for v in data.parameter_callbacks.values()
+    )
     t0 = data.simulations_settings["StartTime"]
     init_expr = build_p_init_expressions(data.parameter_callbacks, t0, data.subs)
 
@@ -139,7 +141,9 @@ def write_parameter_initialization(file, data: TranslationData) -> None:
 def write_state_initialization(file, data: TranslationData) -> None:
     write_section_header(file, "State Initialization")
     state_rows = data.variables_df[data.variables_df["Category of variable"] == "state"]
-    state_init_vals = ", ".join(str(v) for v in state_rows["fixed, free or desired"].tolist())
+    state_init_vals = ", ".join(
+        str(v) for v in state_rows["fixed, free or desired"].tolist()
+    )
 
     file.write("\n@inline function u0_vec()\n")
     file.write(f"\treturn [{state_init_vals}]\n")
@@ -167,7 +171,10 @@ def _write_state_event_followups(file, lhs, base_key, data: TranslationData) -> 
         equation = f"{event['parameter']} = {equations}"
         _, rhs = extract_parameter_numbers(equation)
         if rhs & lhs:
-            if data.order_time_events[event['Equation'][0]] > data.order_time_events[base_key]:
+            if (
+                data.order_time_events[event["Equation"][0]]
+                > data.order_time_events[base_key]
+            ):
                 file.write(f"\taffect_state_time{nr + 1}!(integrator)\n")
 
 
@@ -178,7 +185,9 @@ def write_time_events(file, data: TranslationData) -> None:
     write_section_header(file, "Time Events")
     for n, (k, v) in enumerate(data.time_events_conditions.items()):
         event_time = extract_event_time(insert_integrator(k)).replace(" ", "")
-        file.write(f"\n@inline function event_times{n + 1}()\n\treturn [{event_time}]\nend\n")
+        file.write(
+            f"\n@inline function event_times{n + 1}()\n\treturn [{event_time}]\nend\n"
+        )
         file.write(
             f"@inline function affect_time_event{n + 1}!(integrator)\n"
             "\tu=integrator.u\n\tt=integrator.t\n\tdu=zeros(length(u))\n"
@@ -188,9 +197,13 @@ def write_time_events(file, data: TranslationData) -> None:
         lhs = extract_parameter_numbers(f"{v}={insert_integrator(k)}")[0]
         _write_state_event_followups(file, lhs, k, data)
 
-        file.write("\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n")
+        file.write(
+            "\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n"
+        )
         file.write("end\n")
-        file.write(f"@inline function initialize_time_event{n + 1}!(c,u,t,integrator)\n")
+        file.write(
+            f"@inline function initialize_time_event{n + 1}!(c,u,t,integrator)\n"
+        )
         file.write(f"\taffect_time_event{n + 1}!(integrator)\n")
         file.write("end\n")
 
@@ -233,7 +246,9 @@ def write_continuous_state_events(file, data: TranslationData) -> None:
                 eq = eq.strip()
                 if eq:
                     file.write(f"\t{eq}\n")
-        file.write("\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n")
+        file.write(
+            "\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n"
+        )
 
         lhs = extract_parameter_numbers("\n".join(line))[0]
         _write_state_event_followups(file, lhs, line[0], data)
@@ -275,7 +290,9 @@ def write_discrete_state_events(file, data: TranslationData) -> None:
                 eq = eq.strip()
                 if eq:
                     file.write(f"\t{eq}\n")
-        file.write("\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n")
+        file.write(
+            "\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n"
+        )
 
         lhs = extract_parameter_numbers("\n".join(line))[0]
         _write_state_event_followups(file, lhs, line[0], data)
@@ -296,21 +313,30 @@ def write_preset_time_state_events(file, data: TranslationData) -> None:
         if data.state_event_kinds[n] != "preset_time":
             continue
 
-        time_conditions = extract_state_event_time_conditions(line, data.subs, data.subs_eq)
+        time_conditions = extract_state_event_time_conditions(
+            line, data.subs, data.subs_eq
+        )
         event_times = []
         for cond in time_conditions:
             expr = extract_event_time(cond).strip()
             expr = resolve_init_expression(expr, data.subs)
             expr = expr.replace(" ", "")
 
-            if "u[" in expr or "du[" in expr or "p[" in expr or re.search(r"\bt\b", expr):
+            if (
+                "u[" in expr
+                or "du[" in expr
+                or "p[" in expr
+                or re.search(r"\bt\b", expr)
+            ):
                 raise RuntimeError(
                     f"State event {n + 1} was classified as preset-time, but its event time is not fixed: {expr}"
                 )
             event_times.append(expr)
 
         if not event_times:
-            raise RuntimeError(f"Could not extract preset times for State event {n + 1}")
+            raise RuntimeError(
+                f"Could not extract preset times for State event {n + 1}"
+            )
 
         file.write(f"\n@inline function event_times_state{n + 1}()\n")
         file.write(f"\treturn [{', '.join(event_times)}]\n")
@@ -333,9 +359,13 @@ def write_preset_time_state_events(file, data: TranslationData) -> None:
                     eq = eq.strip()
                     if eq:
                         file.write(f"\t{eq}\n")
-            file.write(f"\t{linked_st_event['parameter']} = {linked_st_event['Equation'][0]}\n")
+            file.write(
+                f"\t{linked_st_event['parameter']} = {linked_st_event['Equation'][0]}\n"
+            )
 
-        file.write("\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n")
+        file.write(
+            "\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n"
+        )
 
         lhs = extract_parameter_numbers("\n".join(line))[0]
         _write_state_event_followups(file, lhs, line[0], data)
@@ -368,21 +398,27 @@ def write_state_time_events(file, data: TranslationData) -> None:
             for eq in eqs.split("\n"):
                 file.write(f"\t{eq}\n")
         file.write(f"\tintegrator.{event['parameter']} = {event['Equation'][0]}\n")
-        file.write("\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n")
+        file.write(
+            "\tpush!(parameter_timeline,Parameters_and_Time(t,copy(integrator.p)))\n"
+        )
 
         equations = "\n".join(event["Equation"])
         lhs = extract_parameter_numbers(f"{event['parameter']} = {equations}")[0]
         _write_state_event_followups(file, lhs, event["Equation"][0], data)
 
         file.write("end\n")
-        file.write(f"@inline function initialize_state_time{n + 1}!(c,u,t,integrator)\n")
+        file.write(
+            f"@inline function initialize_state_time{n + 1}!(c,u,t,integrator)\n"
+        )
         file.write(f"\taffect_state_time{n + 1}!(integrator)\n")
         file.write("end\n")
 
 
 def write_callback_generation(file, data: TranslationData) -> None:
     write_section_header(file, "Callback Generation")
-    file.write("\nfunction generate_Callbacks(cb_settings::CallbackSettings=DEFAULT_CB_SETTINGS)")
+    file.write(
+        "\nfunction generate_Callbacks(cb_settings::CallbackSettings=DEFAULT_CB_SETTINGS)"
+    )
 
     for n, _line in enumerate(data.state_events):
         kind = data.state_event_kinds[n]
@@ -449,13 +485,14 @@ global parameter_timeline=Vector{Parameters_and_Time}()
 
 def write_post_processing(file, data: TranslationData) -> None:
     write_section_header(file, "Post Processing")
-    file.write("\nfunction post_process(solution::ODESolution, parameter_timeline::Vector{Parameters_and_Time})\n")
+    file.write(
+        "\nfunction post_process(solution::ODESolution, parameter_timeline::Vector{Parameters_and_Time})\n"
+    )
     if data.nonlinear_guess_initials:
         file.write("\treset_nonlinear_guesses!()\n")
     file.write("\tdf = DataFrame(time=solution.t")
 
     nogo = False
-    has_nonlin = False
     for eq in data.equations_post_core:
         if eq.startswith("p["):
             continue
@@ -467,7 +504,6 @@ def write_post_processing(file, data: TranslationData) -> None:
             continue
         elif eq.startswith("nonlineareq(u0,p) = begin"):
             nogo = True
-            has_nonlin = True
             continue
         elif " = sol.u" in eq and nogo:
             nogo = False
@@ -522,7 +558,6 @@ def write_post_processing(file, data: TranslationData) -> None:
 """
     )
 
-    
     for eq in data.equations_post_core:
         if eq.startswith("//"):
             continue

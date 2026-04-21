@@ -1,9 +1,9 @@
+within ;
 //
 // Copyright (c) 2026 Robert Weber,Leo Germer, Andreas Hofmann and contributors
 // Licensed under the MIT license. See LICENSE file in the project root for details.
 //
 
-within ;
 package TranslatorModelle
 
   package Components
@@ -30,7 +30,9 @@ package TranslatorModelle
                 {212,10}}), iconTransformation(extent={{192,-10},{212,10}})));
 
       Modelica.Blocks.Continuous.FirstOrder firstOrder(
-        T = 1e-7)                              annotation (Placement(transformation(extent={{90,-10},{110,10}})));
+        T = 1e-7,
+        initType=Modelica.Blocks.Types.Init.InitialState,
+        y_start=12)                            annotation (Placement(transformation(extent={{90,-10},{110,10}})));
 
     equation
       connect(pin_p, voltageSensor.p) annotation (Line(points={{-101,1},{-100,1},{-100,
@@ -167,7 +169,8 @@ package TranslatorModelle
           annotation (Placement(transformation(extent={{-152,52},{-132,72}})));
         Resistance_ShortCircuit resistance_ShortCircuit_TL
           annotation (Placement(transformation(extent={{-48,48},{-10,82}})));
-        Modelica.Electrical.Analog.Basic.Capacitor capacitorC2(C=consumer_S4_Rec.C2)
+        Modelica.Electrical.Analog.Basic.Capacitor capacitorC2(v(fixed=true,
+              start=12),                                       C=consumer_S4_Rec.C2)
           annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
@@ -177,7 +180,8 @@ package TranslatorModelle
               extent={{-10,-10},{10,10}},
               rotation=270,
               origin={-180,-48})));
-        Modelica.Electrical.Analog.Basic.Capacitor capacitorC1(C=consumer_S4_Rec.C2)
+        Modelica.Electrical.Analog.Basic.Capacitor capacitorC1(v(fixed=true,
+              start=12),                                       C=consumer_S4_Rec.C2)
           annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
@@ -189,7 +193,8 @@ package TranslatorModelle
               origin={-286,-48})));
         Modelica.Electrical.Analog.Basic.Resistor resistorL(R=consumer_S4_Rec.R_L)
           annotation (Placement(transformation(extent={{-228,-8},{-208,12}})));
-        Modelica.Electrical.Analog.Basic.Inductor inductorL(L=consumer_S4_Rec.L)
+        Modelica.Electrical.Analog.Basic.Inductor inductorL(i(fixed=true),
+                                                            L=consumer_S4_Rec.L)
           annotation (Placement(transformation(extent={{-262,-8},{-242,12}})));
       equation
         connect(consumerResistor.n,n)  annotation (Line(points={{12,2},{340,2}},               color={0,0,255}));
@@ -392,7 +397,8 @@ package TranslatorModelle
           annotation (Placement(transformation(extent={{14,52},{34,72}})));
         Resistance_ShortCircuit resistance_ShortCircuit_TL
           annotation (Placement(transformation(extent={{-62,44},{-18,80}})));
-        Modelica.Electrical.Analog.Basic.Capacitor capacitorC(C=consumer_S4_Rec.C2)
+        Modelica.Electrical.Analog.Basic.Capacitor capacitorC(v(start=12, fixed
+              =true),                                         C=consumer_S4_Rec.C2)
           annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
@@ -1199,7 +1205,8 @@ Detection")}));
           annotation (Placement(transformation(extent={{-38,-18},{-2,18}})));
         Harness_Rec harnessConfig
           annotation (Placement(transformation(extent={{76,-56},{96,-36}})));
-        Modelica.Electrical.Analog.Basic.Inductor inductor1(L=harnessConfig.L)
+        Modelica.Electrical.Analog.Basic.Inductor inductor1(i(fixed=true),
+                                                            L=harnessConfig.L)
           annotation (Placement(transformation(extent={{56,-10},{76,10}})));
       equation
         connect(contactResistance_p.p, p)
@@ -2660,8 +2667,7 @@ Detection")}));
               extent={{84,204},{112,192}},
               textColor={238,46,47},
               textString="Short
-Circuit",
-              horizontalAlignment=TextAlignment.Left)}),
+Circuit",     horizontalAlignment=TextAlignment.Left)}),
         experiment(
           StopTime=0.25,
           Interval=1e-06,

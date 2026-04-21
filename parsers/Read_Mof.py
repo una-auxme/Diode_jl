@@ -4,6 +4,8 @@
 #
 
 import re
+
+
 class TranslationError(ValueError):
     def __init__(self, structure):
         self.structure = structure
@@ -13,8 +15,8 @@ class TranslationError(ValueError):
         return f"While reading the dsmodel.mof the following structure has not been closed: {self.structure} "
 
 
-def read_mof(filepath, start="// Dynamics Section", end='// -------------'):
-    with open(filepath, 'r', encoding='utf-8') as file:
+def read_mof(filepath, start="// Dynamics Section", end="// -------------"):
+    with open(filepath, encoding="utf-8") as file:
         content = file.read()
 
         start_index = content.find(start)
@@ -34,113 +36,136 @@ def read_mof(filepath, start="// Dynamics Section", end='// -------------'):
 
         dynamics_section = section_text.split("\n")
 
-
     cleaned_lines = []
     in_multiline_comment = False
-    comment=False
-    discrete_tag="##Discrete Event##"
-    in_discrete=False
-    in_discrete_new=False
-    in_special_case=""
-    linear_counter=1
-    nonlinear_counter=1
-    for n,line in enumerate(dynamics_section):
+    comment = False
+    discrete_tag = "##Discrete Event##"
+    in_discrete = False
+    in_discrete_new = False
+    in_special_case = ""
+    linear_counter = 1
+    nonlinear_counter = 1
+    for _n, line in enumerate(dynamics_section):
         if not in_multiline_comment:
-            if line.strip().startswith("// Discrete part") :
+            if line.strip().startswith("// Discrete part"):
                 in_discrete_new = True
             elif line.strip().startswith("// Matrix solution:"):
-                in_special_case="linear system"
-            elif line.strip().startswith("// Torn part") and in_special_case=="linear system add lines":
-                in_special_case=""
+                in_special_case = "linear system"
+            elif (
+                line.strip().startswith("// Torn part")
+                and in_special_case == "linear system add lines"
+            ):
+                in_special_case = ""
                 cleaned_lines.append(f"##END Linear{linear_counter}##;")
-                linear_counter+=1
+                linear_counter += 1
 
             elif line.strip().startswith("// Nonlinear system of equations"):
                 in_special_case = "nonlinear system"
-            elif line.strip().startswith("// Start values for iteration variables of non-linear system") and in_special_case == "nonlinear system":
+            elif (
+                line.strip().startswith(
+                    "// Start values for iteration variables of non-linear system"
+                )
+                and in_special_case == "nonlinear system"
+            ):
                 in_special_case = "nonlinear system iteration variabels"
-                cleaned_lines.append(f"## Nonlinear system of equations {nonlinear_counter};")
-            elif in_special_case == "nonlinear system iteration variabels" and line.strip().startswith("algorithm // Torn part"):
+                cleaned_lines.append(
+                    f"## Nonlinear system of equations {nonlinear_counter};"
+                )
+            elif (
+                in_special_case == "nonlinear system iteration variabels"
+                and line.strip().startswith("algorithm // Torn part")
+            ):
                 in_special_case = "nonlinear system algorithm"
                 continue
             elif in_special_case == "nonlinear system iteration variabels":
-                cleaned_lines.append(line.strip("//").strip()+";")
-            elif in_special_case == "nonlinear system algorithm" and line.strip().startswith("equation // Residual equations"):
+                cleaned_lines.append(line.strip("/").strip() + ";")
+            elif (
+                in_special_case == "nonlinear system algorithm"
+                and line.strip().startswith("equation // Residual equations")
+            ):
                 in_special_case = "nonlinear system residual equations"
                 cleaned_lines.append("## Residual equations;")
                 continue
-            elif in_special_case == "nonlinear system residual equations" and line.strip().startswith("// Non-zero elements of Jacobian"):
-                in_special_case ="nonlinear system Jacobian"
+            elif (
+                in_special_case == "nonlinear system residual equations"
+                and line.strip().startswith("// Non-zero elements of Jacobian")
+            ):
+                in_special_case = "nonlinear system Jacobian"
                 cleaned_lines.append("## Jacobian;")
                 continue
-            elif in_special_case == "nonlinear system Jacobian" and line.strip().startswith("// End of nonlinear system of equations"):
-                cleaned_lines.append(f"##End nonlinear system of equations {nonlinear_counter};")
-                nonlinear_counter+=1
-                in_special_case =""
+            elif (
+                in_special_case == "nonlinear system Jacobian"
+                and line.strip().startswith("// End of nonlinear system of equations")
+            ):
+                cleaned_lines.append(
+                    f"##End nonlinear system of equations {nonlinear_counter};"
+                )
+                nonlinear_counter += 1
+                in_special_case = ""
                 continue
-            line = re.sub(r'//.*?(?=//|$)', '', line)  
-            
-        line = re.sub(r'/\*.*?\*/', '', line) 
-        if '/*' in line:
-            comment= True
-            line = line.split('/*')[0] 
-        if '*/' in line:
+            line = re.sub(r"//.*?(?=//|$)", "", line)
+
+        line = re.sub(r"/\*.*?\*/", "", line)
+        if "/*" in line:
+            comment = True
+            line = line.split("/*")[0]
+        if "*/" in line:
             in_multiline_comment = False
-            comment=False
-            line = line.split('*/')[1] 
+            comment = False
+            line = line.split("*/")[1]
         if not in_multiline_comment and line.strip():
             if in_discrete:
-                in_discrete_new=False
-                line=discrete_tag+line
-            elif in_special_case=="linear system":
-                in_special_case="linear system add lines"
+                in_discrete_new = False
+                line = discrete_tag + line
+            elif in_special_case == "linear system":
+                in_special_case = "linear system add lines"
                 cleaned_lines.append(f"##Linear{linear_counter}##;")
-               
-            in_multiline_comment= comment
+
+            in_multiline_comment = comment
             cleaned_lines.append(line)
         elif not line.strip():
-            in_discrete=in_discrete_new
-        in_multiline_comment=comment
-    if in_special_case!="":
+            in_discrete = in_discrete_new
+        in_multiline_comment = comment
+    if in_special_case != "":
         raise TranslationError(in_special_case)
     if in_discrete or in_discrete_new:
         raise TranslationError("Discrete System")
 
     equations = []
-    Time_events=[]
+    Time_events = []
     current_equation = []
-    State_events=[]
-    when_struct=[]
-    in_when=0
-    order_events=[]
-    for n,line in enumerate(cleaned_lines):
+    State_events = []
+    when_struct = []
+    in_when = 0
+    order_events = []
+    for n, line in enumerate(cleaned_lines):
         line = line.strip()
-        if line.endswith(';'):
+        if line.endswith(";"):
             current_equation.append(line[:-1])
-            eq=' '.join(current_equation)
+            eq = " ".join(current_equation)
             if eq.startswith(discrete_tag):
-            #if discrete_tag in eq:
-                eq=eq.replace(discrete_tag,"").strip()
+                # if discrete_tag in eq:
+                eq = eq.replace(discrete_tag, "").strip()
                 State_events.append(eq)
-                order_events.append((n,eq))
+                order_events.append((n, eq))
             elif eq.startswith("when "):
                 when_struct.append(eq)
-                in_when+=1
+                in_when += 1
             elif eq.startswith("end when"):
                 when_struct.append(eq)
                 State_events.append("\n".join(when_struct))
-                order_events.append((n,"\n".join(when_struct)))
+                order_events.append((n, "\n".join(when_struct)))
 
-                #in_when-=1                             # mod
+                # in_when-=1                             # mod
                 in_when -= 1
                 if in_when == 0:
                     when_struct = []
 
-            elif in_when!=0:
+            elif in_when != 0:
                 when_struct.append(eq)
             elif re.search(r"if\s+time ", eq):
                 Time_events.append(eq)
-                order_events.append([n,eq])
+                order_events.append([n, eq])
                 equations.append(eq)
             else:
                 equations.append(eq)
@@ -149,15 +174,15 @@ def read_mof(filepath, start="// Dynamics Section", end='// -------------'):
             current_equation.append(line)
     if in_when != 0:
         raise TranslationError("When")
-    return equations,State_events,Time_events,order_events
+    return equations, State_events, Time_events, order_events
 
-if __name__=="__main__":
-    eq=read_mof("Dymola_data/dsmodel.mof")
 
+if __name__ == "__main__":
+    eq = read_mof("Dymola_data/dsmodel.mof")
 
 
 def read_equation_section(filepath, start_prefix, end_prefix=None):
-    with open(filepath, 'r', encoding='utf-8') as file:
+    with open(filepath, encoding="utf-8") as file:
         lines = file.readlines()
 
     in_section = False
@@ -193,7 +218,7 @@ def read_equation_section(filepath, start_prefix, end_prefix=None):
             else:
                 in_multiline_comment = True
 
-        line = re.sub(r'//.*$', '', line).strip()
+        line = re.sub(r"//.*$", "", line).strip()
 
         if not line:
             continue
@@ -216,12 +241,9 @@ def read_conditional_equations(filepath):
     return read_equation_section(
         filepath,
         start_prefix="// Conditionally Accepted Section",
-        end_prefix="// Eliminated alias"
+        end_prefix="// Eliminated alias",
     )
 
 
 def read_alias_equations(filepath):
-    return read_equation_section(
-        filepath,
-        start_prefix="// Eliminated alias"
-    )
+    return read_equation_section(filepath, start_prefix="// Eliminated alias")

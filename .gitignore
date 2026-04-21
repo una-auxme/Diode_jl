@@ -13,6 +13,9 @@ build/
 venv/
 env/
 
+# ruff
+.ruff_cache/
+
 # IDE
 .vscode/
 .idea/
@@ -20,3 +23,16 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Dymola
+Modelica_Examples/*.txt
+*.mof
+Modelica_Examples/*.xml
+*.mat
+dsmodel*.c
+*.exe
+request
+status
+
+# Diode.jl output directory
+Generated_Files/

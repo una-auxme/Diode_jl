@@ -4,18 +4,17 @@
 #
 
 import os
-import questionary
 import sys
 from functools import partial
 
-from .parsers import Read_Mof as Mof
-from .parsers import Read_dsfinal as dsfinal
-
+import questionary
 
 from .cli import get_generated_files_dir, prompt_for_time_settings, resolve_dataset_path
 from .generators.julia_writer import write_julia_model
 from .logging_utils import log_error, log_info, log_ok, log_step, log_warn
 from .models import TranslationData
+from .parsers import Read_dsfinal as dsfinal
+from .parsers import Read_Mof as Mof
 from .transforms.equation_rewriter import reformat_Derivatives, reformat_Equations
 from .transforms.event_analysis import (
     bool_to_zero_crossing,
@@ -33,7 +32,11 @@ from .transforms.system_translation import (
     translate_linear_system_of_equations,
     translate_nonlinear_system_of_equations,
 )
-from .transforms.text_utils import extract_lhs_vars, extract_time_events, filter_valid_assignments
+from .transforms.text_utils import (
+    extract_lhs_vars,
+    extract_time_events,
+    filter_valid_assignments,
+)
 
 
 def read_simulation_settings_and_variable_table(path: str):
@@ -43,7 +46,9 @@ def read_simulation_settings_and_variable_table(path: str):
         log_info("Trying to read dsin.txt")
         try:
             Variabels_df = dsfinal.read_and_process_file(f"{path}/dsin.txt")
-            simulations_Settings = dsfinal.extract_simulations_Settings(f"{path}/dsin.txt")
+            simulations_Settings = dsfinal.extract_simulations_Settings(
+                f"{path}/dsin.txt"
+            )
             log_ok("Successfully read dsin.txt")
         except ValueError:
             log_warn("Could not read dsin.txt. Falling back to dsfinal.txt")
@@ -52,7 +57,9 @@ def read_simulation_settings_and_variable_table(path: str):
         log_info("Trying to read dsfinal.txt")
         try:
             Variabels_df = dsfinal.read_and_process_file(f"{path}/dsfinal.txt")
-            simulations_Settings = dsfinal.extract_simulations_Settings(f"{path}/dsfinal.txt")
+            simulations_Settings = dsfinal.extract_simulations_Settings(
+                f"{path}/dsfinal.txt"
+            )
             log_ok("Successfully read dsfinal.txt")
         except ValueError:
             log_error("No data could be read from 'dsfinal.txt'.")
@@ -94,14 +101,18 @@ def read_model_sections(data: TranslationData) -> None:
         data.equations_bound = Mof.read_mof(
             f"{data.path}/dsmodel.mof", "// Bound Parameter Section"
         )[0]
-        data.equations_bound = [eq for eq in data.equations_bound if not eq.startswith("assert")]
+        data.equations_bound = [
+            eq for eq in data.equations_bound if not eq.startswith("assert")
+        ]
         log_ok(f"Bound parameter equations read: {len(data.equations_bound)}")
     except UnboundLocalError:
         data.equations_bound = []
         log_info("No bound parameter section found in dsmodel.mof")
 
     try:
-        data.equations_conditional = Mof.read_conditional_equations(f"{data.path}/dsmodel.mof")
+        data.equations_conditional = Mof.read_conditional_equations(
+            f"{data.path}/dsmodel.mof"
+        )
         log_ok(f"Conditional equations read: {len(data.equations_conditional)}")
     except UnboundLocalError:
         data.equations_conditional = []
@@ -122,7 +133,9 @@ def prepare_translation_structures(data: TranslationData) -> None:
         data.variables_df[data.variables_df["Category of variable"] == "state"]
     )["Name"].tolist()
     data.derivatives = (
-        data.variables_df[data.variables_df["Category of variable"] == "state derivative"]
+        data.variables_df[
+            data.variables_df["Category of variable"] == "state derivative"
+        ]
     )["Name"].tolist()
     data.parameters_struct = (
         data.variables_df[
@@ -140,7 +153,9 @@ def prepare_translation_structures(data: TranslationData) -> None:
         + [var + " :=  " for var in data.parameters_struct]
         + data.initial_section
     )
-    data.non_state_der_or_vec = [var.replace(".", "_") for var in data.non_state_der_or_vec]
+    data.non_state_der_or_vec = [
+        var.replace(".", "_") for var in data.non_state_der_or_vec
+    ]
 
     reformat_Derivatives(data.derivatives)
 
@@ -167,7 +182,9 @@ def prepare_translation_structures(data: TranslationData) -> None:
         data.non_state_der_or_vec,
         data.parameter_callbacks,
     )
-    data.order_events = [[event[0], eq] for event, eq in zip(data.order_events, reformated)]
+    data.order_events = [
+        [event[0], eq] for event, eq in zip(data.order_events, reformated)
+    ]
 
     data.time_events_conditions = {
         event: f"p[{n + 1 + len(data.parameter_callbacks)}]"
@@ -187,7 +204,9 @@ def prepare_translation_structures(data: TranslationData) -> None:
             eq = eq.replace("?", "").strip()
             data.order_time_events[eq] = nr
 
-    non_compiled_time_events = remove_non_compiled_time_events(data.time_events_conditions)
+    non_compiled_time_events = remove_non_compiled_time_events(
+        data.time_events_conditions
+    )
     data.state_time_events = [
         {"Zerocrossing": z, "Equation": k, "parameter": v}
         for z, (k, v) in zip(
@@ -251,7 +270,9 @@ def prepare_translation_structures(data: TranslationData) -> None:
 
     restructure_whenstatments(data.state_events, data.parameter_callbacks)
     restructure_whenstatments(reformated, data.parameter_callbacks)
-    data.order_events = [[event[0], eq] for event, eq in zip(data.order_events, reformated)]
+    data.order_events = [
+        [event[0], eq] for event, eq in zip(data.order_events, reformated)
+    ]
 
     for nr, eq in data.order_events:
         if eq in data.state_events:
@@ -302,7 +323,9 @@ def build_substitution_tables(data: TranslationData) -> None:
                 data.subs[var] = "(" + "".join(buffer[1:]) + ")"
                 data.subs_eq[var] = eq
 
-    insert_calculated_variabels_for_State_events(data.state_events, data.subs, data.subs_eq)
+    insert_calculated_variabels_for_State_events(
+        data.state_events, data.subs, data.subs_eq
+    )
     for eq in data.state_time_events:
         eq["Zerocrossing"] = insert_calculated_variabels_for_State_events(
             [eq["Zerocrossing"]], data.subs, data.subs_eq
@@ -330,7 +353,9 @@ def classify_and_link_events(data: TranslationData) -> None:
 
             ev_conds = [
                 c.replace(" ", "")
-                for c in extract_state_event_time_conditions(ev, data.subs, data.subs_eq)
+                for c in extract_state_event_time_conditions(
+                    ev, data.subs, data.subs_eq
+                )
             ]
 
             if st_cond in ev_conds:
@@ -360,8 +385,8 @@ def run_translation(output_file: str | None = None) -> TranslationData:
     data.path = resolve_dataset_path()
 
     log_step("Reading simulation settings and variable table")
-    data.variables_df, data.simulations_settings = read_simulation_settings_and_variable_table(
-        data.path
+    data.variables_df, data.simulations_settings = (
+        read_simulation_settings_and_variable_table(data.path)
     )
 
     read_model_sections(data)
@@ -371,10 +396,16 @@ def run_translation(output_file: str | None = None) -> TranslationData:
     classify_and_link_events(data)
 
     generated_dir = get_generated_files_dir()
-    output_path = generated_dir / "GeneratedModel.jl" if output_file is None else generated_dir / output_file
+    output_path = (
+        generated_dir / "GeneratedModel.jl"
+        if output_file is None
+        else generated_dir / output_file
+    )
 
     log_step(f"Writing Julia file {output_path}")
     write_julia_model(str(output_path), data)
 
-    log_ok(f"Translation finished successfully. Julia file was written to: {output_path}")
+    log_ok(
+        f"Translation finished successfully. Julia file was written to: {output_path}"
+    )
     return data

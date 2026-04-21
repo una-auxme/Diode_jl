@@ -3,13 +3,14 @@
 # Licensed under the MIT license. See LICENSE file in the project root for details.
 #
 
-from pathlib import Path
 import os
-import questionary
 import shutil
 import sys
 import tkinter as tk
+from pathlib import Path
 from tkinter import filedialog
+
+import questionary
 
 from .logging_utils import log_info, log_ok, log_step
 
@@ -20,7 +21,9 @@ def choose_folder(files_to_check=None) -> str:
 
     root = tk.Tk()
     root.withdraw()
-    path = filedialog.askdirectory(title="Select the folder containing the simulation data")
+    path = filedialog.askdirectory(
+        title="Select the folder containing the simulation data"
+    )
 
     if path:
         files_in_path = os.listdir(path)
@@ -42,7 +45,7 @@ def choose_folder(files_to_check=None) -> str:
 
 def is_convertable_to(input_string: str, datatype: type) -> bool:
     try:
-        if datatype != bool:
+        if datatype is not bool:
             datatype(input_string)
             return True
         my_boolean_values = {"true", "false", "0", "1", "0.0", "1.0"}
@@ -73,15 +76,14 @@ def resolve_dataset_path() -> str:
         log_info(f"Found local folder '{dymola_dir.name}'")
         files_in_path = os.listdir(dymola_dir)
 
-        has_required_files = (
-            "dsmodel.mof" in files_in_path
-            and ("dsin.txt" in files_in_path or "dsfinal.txt" in files_in_path)
+        has_required_files = "dsmodel.mof" in files_in_path and (
+            "dsin.txt" in files_in_path or "dsfinal.txt" in files_in_path
         )
 
         if has_required_files:
             use_local = questionary.confirm(
                 f"Do you want to use the files directly from '{dymola_dir.name}'?",
-                default=True
+                default=True,
             ).ask()
 
             if use_local:
@@ -97,7 +99,9 @@ def resolve_dataset_path() -> str:
 
     if path == "":
         log_info("No valid local dataset selected. Opening folder chooser.")
-        print("Please select a folder in the new window from which the data should be loaded.")
+        print(
+            "Please select a folder in the new window from which the data should be loaded."
+        )
 
         while path == "":
             selected_path = choose_folder(["dsmodel.mof"])
@@ -118,7 +122,7 @@ def resolve_dataset_path() -> str:
 
         copy_to_local = questionary.confirm(
             f"Should the selected dataset be copied to '{dymola_dir.name}'?",
-            default=True
+            default=True,
         ).ask()
 
         if copy_to_local:
@@ -147,18 +151,22 @@ def resolve_dataset_path() -> str:
     return path
 
 
+def _is_convertable_to_float(s: str) -> bool:
+    return is_convertable_to(s, float)
+
+
 def prompt_for_time_settings() -> dict:
-    is_convertable_to_float = lambda s: is_convertable_to(s, float)
     return {
         "StartTime": questionary.text(
-            "Please enter the simulation start time:", validate=is_convertable_to_float
+            "Please enter the simulation start time:", validate=_is_convertable_to_float
         ).ask(),
         "StopTime": questionary.text(
-            "Please enter the simulation stop time:", validate=is_convertable_to_float
+            "Please enter the simulation stop time:", validate=_is_convertable_to_float
         ).ask(),
     }
 
 
 def main() -> None:
     from .pipeline import run_translation
+
     run_translation()

@@ -4,7 +4,6 @@
 #
 
 import re
-from typing import Dict, List
 
 from ordered_set import OrderedSet
 
@@ -16,7 +15,7 @@ from .text_utils import (
 )
 
 
-def callback_parameter_state_events(State_events: List[str]) -> Dict[str, str]:
+def callback_parameter_state_events(State_events: list[str]) -> dict[str, str]:
     callack_para = {}
     n = 1
     for event in State_events:
@@ -27,7 +26,9 @@ def callback_parameter_state_events(State_events: List[str]) -> Dict[str, str]:
     return callack_para
 
 
-def callback_parameter_equations(Equations: List[str], parameterdict: Dict[str, str]) -> None:
+def callback_parameter_equations(
+    Equations: list[str], parameterdict: dict[str, str]
+) -> None:
     def find_pre_occurrences(text):
         pattern = r"(?<![A-Za-z0-9_])pre\((.*?)\)"
         return re.findall(pattern, text)
@@ -45,19 +46,25 @@ def callback_parameter_equations(Equations: List[str], parameterdict: Dict[str, 
                     parameterdict[f"{var[0].replace('.', '_')}"] = f"p[{n}]"
 
 
-def restructure_whenstatments(statements: List[str], parameter_callbacks: Dict[str, str]) -> None:
+def restructure_whenstatments(
+    statements: list[str], parameter_callbacks: dict[str, str]
+) -> None:
     replacements = {}
     for k, v in parameter_callbacks.items():
         if str(k).startswith("pre("):
             replacements[k[4:-1]] = v
-    replacements.update({"when": "if", "elsewhen": "elseif", "end when": "end", "?": "\n\t"})
+    replacements.update(
+        {"when": "if", "elsewhen": "elseif", "end when": "end", "?": "\n\t"}
+    )
     for i, eq in enumerate(statements):
         if eq.strip().startswith("when"):
             eq = conditional_substitute(eq, replacements)
             statements[i] = eq
 
 
-def insert_calculated_variabels_for_State_events(State_events: List[str], subs: Dict, subs_eq: Dict):
+def insert_calculated_variabels_for_State_events(
+    State_events: list[str], subs: dict, subs_eq: dict
+):
     for n, event in enumerate(State_events):
         res = find_keys(event, subs)
         buffer = OrderedSet(res)
@@ -87,19 +94,21 @@ def insert_calculated_variabels_for_State_events(State_events: List[str], subs: 
     return State_events
 
 
-def remove_non_compiled_time_events(Time_events: Dict[str, str]) -> Dict[str, str]:
+def remove_non_compiled_time_events(Time_events: dict[str, str]) -> dict[str, str]:
     def check_variables(s: str) -> bool:
         pattern = r"^t\s*(?:<|>|<=|>=|==|!=)\s*(?:par\.[A-Za-z_]\w*(?:\s*\+\s*par\.[A-Za-z_]\w*)*)\s*$"
         return bool(re.match(pattern, s))
 
-    uncompiled_time_events = {k: v for k, v in Time_events.items() if not check_variables(k)}
+    uncompiled_time_events = {
+        k: v for k, v in Time_events.items() if not check_variables(k)
+    }
     compiled_time_events = {k: v for k, v in Time_events.items() if check_variables(k)}
     Time_events.clear()
     Time_events.update(compiled_time_events)
     return uncompiled_time_events
 
 
-def bool_to_zero_crossing(expressions: List[str]) -> List[str]:
+def bool_to_zero_crossing(expressions: list[str]) -> list[str]:
     converted_expressions = []
     pattern = re.compile(r"^\s*t\s*([<>]=?)\s*(.+)$")
 
@@ -122,7 +131,9 @@ def bool_to_zero_crossing(expressions: List[str]) -> List[str]:
     return converted_expressions
 
 
-def parameter_from_when(State_events: List[str], parameter_callbacks: Dict[str, str]) -> None:
+def parameter_from_when(
+    State_events: list[str], parameter_callbacks: dict[str, str]
+) -> None:
     for eqs in State_events:
         if eqs.strip().startswith("when"):
             for eq in eqs.split("\n"):
@@ -130,14 +141,16 @@ def parameter_from_when(State_events: List[str], parameter_callbacks: Dict[str, 
                 if len(vars) > 1:
                     varname = vars[0].split()[-1].replace(".", "_")
                     if varname not in parameter_callbacks:
-                        parameter_callbacks[varname] = f"p[{len(parameter_callbacks) + 1}]"
+                        parameter_callbacks[varname] = (
+                            f"p[{len(parameter_callbacks) + 1}]"
+                        )
 
 
 def build_p_init_expressions(
-    parameter_callbacks: Dict[str, str],
+    parameter_callbacks: dict[str, str],
     start_time: str,
-    subs: Dict[str, str],
-) -> Dict[int, str]:
+    subs: dict[str, str],
+) -> dict[int, str]:
     init_expr = {}
 
     for key, slot in parameter_callbacks.items():
@@ -158,7 +171,7 @@ def build_p_init_expressions(
     return init_expr
 
 
-def extract_state_event_trigger(event_lines: List[str]) -> str:
+def extract_state_event_trigger(event_lines: list[str]) -> str:
     first = event_lines[0].strip()
     first = first.split("\n", 1)[0].strip()
 
@@ -174,7 +187,9 @@ def extract_state_event_trigger(event_lines: List[str]) -> str:
     return first
 
 
-def collect_trigger_dependency_lines(trigger: str, subs: Dict[str, str], subs_eq: Dict[str, str]) -> List[str]:
+def collect_trigger_dependency_lines(
+    trigger: str, subs: dict[str, str], subs_eq: dict[str, str]
+) -> list[str]:
     res = find_keys(trigger, subs)
     buffer = OrderedSet(res)
 
@@ -203,7 +218,9 @@ def collect_trigger_dependency_lines(trigger: str, subs: Dict[str, str], subs_eq
     return lines
 
 
-def extract_state_event_time_conditions(event_lines: List[str], subs: Dict[str, str], subs_eq: Dict[str, str]) -> List[str]:
+def extract_state_event_time_conditions(
+    event_lines: list[str], subs: dict[str, str], subs_eq: dict[str, str]
+) -> list[str]:
     trigger = extract_state_event_trigger(event_lines)
     dep_lines = collect_trigger_dependency_lines(trigger, subs, subs_eq)
 
@@ -216,14 +233,18 @@ def extract_state_event_time_conditions(event_lines: List[str], subs: Dict[str, 
     return conditions
 
 
-def has_continuous_dependency(event_lines: List[str], subs: Dict[str, str], subs_eq: Dict[str, str]) -> bool:
+def has_continuous_dependency(
+    event_lines: list[str], subs: dict[str, str], subs_eq: dict[str, str]
+) -> bool:
     trigger = extract_state_event_trigger(event_lines)
     dep_lines = collect_trigger_dependency_lines(trigger, subs, subs_eq)
     text = trigger + "\n" + "\n".join(dep_lines)
     return ("u[" in text) or ("du[" in text)
 
 
-def classify_state_event(event_lines: List[str], subs: Dict[str, str], subs_eq: Dict[str, str]) -> str:
+def classify_state_event(
+    event_lines: list[str], subs: dict[str, str], subs_eq: dict[str, str]
+) -> str:
     if has_continuous_dependency(event_lines, subs, subs_eq):
         return "continuous"
 

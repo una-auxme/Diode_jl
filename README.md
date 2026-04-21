@@ -11,6 +11,8 @@ Diode.jl is a software tool that converts the **compiled representation produced
 
 The translator is organized as a Python package and is started through its package entry point. Running the translator on a Dymola run directory generates a Julia file, by default `GeneratedModel.jl`, which can then be executed and modified like any other Julia source file.
 
+Please refer to the Modelica_Example directory for the description of ...
+
 ---
 
 ## Highlights
@@ -44,8 +46,8 @@ Before running the simulation, enable the following settings in Dymola:
   *Generate listing of translated Modelica code in `dsmodel.mof`*
 
 - **Translation flags:**
-  - `ModelicaCodeWithJacobians = true`
-  - `ModelicaCodeWithAliasVariables = true`
+  - `Advanced.OutputModelicaCodeWithJacobians = true`
+  - `Advanced.OutputModelicaCodeWithAliasVariables = true`
 
 2) **Prepare the Dymola artifacts:** After the simulation has finished, collect the relevant Dymola output files from the Dymola run directory. The translator expects at least `dsmodel.mof` together with either `dsin.txt` or `dsfinal.txt`.
 
@@ -131,7 +133,3 @@ Contributions are welcome and highly appreciated.
 
 Please keep changes focused, add or update documentation where relevant, and include tests if available.
 
-
-
-## License
-This package is distributed under the xxx License. This license can be found online at xxx.

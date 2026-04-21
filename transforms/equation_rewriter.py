@@ -3,7 +3,6 @@
 # Licensed under the MIT license. See LICENSE file in the project root for details.
 #
 
-from typing import Dict, List
 
 from .text_utils import (
     conditional_substitute,
@@ -15,7 +14,7 @@ from .text_utils import (
 )
 
 
-def reformat_Derivatives(derivatives: List[str]) -> None:
+def reformat_Derivatives(derivatives: list[str]) -> None:
     for n, der in enumerate(derivatives):
         name = ".".join(der.split(".")[:-1])
         variable = der.split("(")[-1].split(")")[0]
@@ -23,16 +22,17 @@ def reformat_Derivatives(derivatives: List[str]) -> None:
 
 
 def reformat_Equations(
-    eqs: List[str],
-    state_variables: List[str],
-    parameters_struct: List[str],
-    derivatives: List[str],
-    non_state_der_or_vec: List[str],
-    parameter_callbacks: Dict[str, str],
+    eqs: list[str],
+    state_variables: list[str],
+    parameters_struct: list[str],
+    derivatives: list[str],
+    non_state_der_or_vec: list[str],
+    parameter_callbacks: dict[str, str],
 ) -> None:
     state_substi = {state: f"u[{i + 1}]" for i, state in enumerate(state_variables)}
     parametersubsti = {
-        par.replace(".", "_"): f'par.{par.replace(".", "_")}' for par in parameters_struct
+        par.replace(".", "_"): f"par.{par.replace('.', '_')}"
+        for par in parameters_struct
     }
     replacements = {
         "time": "t",

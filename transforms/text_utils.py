@@ -4,7 +4,6 @@
 #
 
 import re
-from typing import Dict, List, Tuple
 
 
 def extract_non_float_dots(input_string: str):
@@ -89,12 +88,12 @@ def replace_der(input_string: str) -> str:
     return re.sub(pattern, replacement, input_string)
 
 
-def extract_time_events(input_string: str) -> List[str]:
+def extract_time_events(input_string: str) -> list[str]:
     pattern = r"t\s*(?:<|<=|>|>=|==|!=)\s*[^?\|&:]+(?:\?)?"
     return re.findall(pattern, input_string)
 
 
-def wrap_matches_once(text: str, names: List[str], prefix: str, suffix: str) -> str:
+def wrap_matches_once(text: str, names: list[str], prefix: str, suffix: str) -> str:
     if not names:
         return text
 
@@ -112,7 +111,7 @@ def wrap_matches_once(text: str, names: List[str], prefix: str, suffix: str) -> 
     return pattern.sub(lambda m: f"{prefix}{m.group(0)}{suffix}", text)
 
 
-def find_keys(input_string: str, substitutions: Dict[str, str]) -> List[str]:
+def find_keys(input_string: str, substitutions: dict[str, str]) -> list[str]:
     if not substitutions:
         return []
 
@@ -134,16 +133,18 @@ def find_keys(input_string: str, substitutions: Dict[str, str]) -> List[str]:
         find_keys._cache[cache_key] = combined_pattern
 
     pattern = find_keys._cache[cache_key]
-    return list(dict.fromkeys(match.group(0) for match in pattern.finditer(input_string)))
+    return list(
+        dict.fromkeys(match.group(0) for match in pattern.finditer(input_string))
+    )
 
 
-def extract_parameter_numbers(input_string: str) -> Tuple[set, set]:
+def extract_parameter_numbers(input_string: str) -> tuple[set, set]:
     lhs = set()
     rhs = set()
     pattern = r"p\[(\d+)\]"
 
     for m in re.finditer(pattern, input_string):
-        nach_match = input_string[m.end():]
+        nach_match = input_string[m.end() :]
         if re.match(r"\s*=", nach_match):
             lhs.add(int(m.group(1)))
         else:
@@ -152,10 +153,10 @@ def extract_parameter_numbers(input_string: str) -> Tuple[set, set]:
     return lhs, rhs
 
 
-def extract_lhs_vars(lines: List[str]) -> List[str]:
+def extract_lhs_vars(lines: list[str]) -> list[str]:
     ignore_pattern = re.compile(r"^(?:u|du)\[\d+\]$")
 
-    result: List[str] = []
+    result: list[str] = []
     for line in lines:
         if "=" not in line:
             continue
@@ -171,7 +172,7 @@ def extract_lhs_vars(lines: List[str]) -> List[str]:
     return result
 
 
-def filter_valid_assignments(lines: List[str]) -> List[str]:
+def filter_valid_assignments(lines: list[str]) -> list[str]:
     valid = []
     for line in lines:
         if "=" not in line:
@@ -200,7 +201,7 @@ def filter_valid_assignments(lines: List[str]) -> List[str]:
     return valid
 
 
-def resolve_init_expression(expr: str, subs: Dict[str, str], max_iter: int = 20) -> str:
+def resolve_init_expression(expr: str, subs: dict[str, str], max_iter: int = 20) -> str:
     out = expr
     for _ in range(max_iter):
         prev = out

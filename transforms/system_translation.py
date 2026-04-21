@@ -5,11 +5,15 @@
 
 import re
 import sys
-from typing import Callable, Dict, List
+from typing import Callable
 
 
-def translate_linear_system_of_equations(input_lines: List[str], number) -> List[str]:
-    j_lines = [line for line in input_lines if line.strip("par.").strip('var"').startswith("J[")]
+def translate_linear_system_of_equations(input_lines: list[str], number) -> list[str]:
+    j_lines = [
+        line
+        for line in input_lines
+        if line.strip("par.").strip('var"').startswith("J[")
+    ]
 
     try:
         j_max_row = max(int(re.search(r"J\[(\d+),", line).group(1)) for line in j_lines)
@@ -20,7 +24,9 @@ def translate_linear_system_of_equations(input_lines: List[str], number) -> List
         )
         sys.exit(1)
 
-    j_max_col = max(int(re.search(r"J\[\d+, (\d+)\]", line).group(1)) for line in j_lines)
+    j_max_col = max(
+        int(re.search(r"J\[\d+, (\d+)\]", line).group(1)) for line in j_lines
+    )
 
     j_matrix = [["0"] * j_max_col for _ in range(j_max_row)]
     for line in j_lines:
@@ -31,10 +37,18 @@ def translate_linear_system_of_equations(input_lines: List[str], number) -> List
 
     julia_code = ["// Start Linear System"]
     julia_code.extend(
-        [f"J{number} = [" + ";\n\t\t".join("\t" + "\t\t".join(row) for row in j_matrix) + "\n\t\t]\n"]
+        [
+            f"J{number} = ["
+            + ";\n\t\t".join("\t" + "\t\t".join(row) for row in j_matrix)
+            + "\n\t\t]\n"
+        ]
     )
 
-    b_lines = [line for line in input_lines if line.strip("par.").strip('var"').startswith("b[")]
+    b_lines = [
+        line
+        for line in input_lines
+        if line.strip("par.").strip('var"').startswith("b[")
+    ]
     b_vector = ["0"] * j_max_row
     for line in b_lines:
         index = int(re.search(r"b\[(\d+)\]", line).group(1)) - 1
@@ -44,7 +58,9 @@ def translate_linear_system_of_equations(input_lines: List[str], number) -> List
     julia_code.append(f"b{number} = [" + ";\n\t\t".join(b_vector) + "\n\t\t]\n")
     julia_code.append(f"x{number} = J{number}\\b{number}\n")
     julia_code.append(
-        "".join([line.split("=")[0] for line in input_lines if line.strip().endswith("x")])
+        "".join(
+            [line.split("=")[0] for line in input_lines if line.strip().endswith("x")]
+        )
         + f" = x{number}\n"
     )
     julia_code.append("// End Linear System")
@@ -52,12 +68,16 @@ def translate_linear_system_of_equations(input_lines: List[str], number) -> List
 
 
 def translate_nonlinear_system_of_equations(
-    input_lines: List[str],
+    input_lines: list[str],
     number,
-    nonlinear_guess_initials: Dict[int, List[str]],
-) -> List[str]:
-    def residuals(lines: List[str]) -> str:
-        return "return [" + ", ".join(["(" + var.split("=")[1] + ")" for var in lines]) + "]"
+    nonlinear_guess_initials: dict[int, list[str]],
+) -> list[str]:
+    def residuals(lines: list[str]) -> str:
+        return (
+            "return ["
+            + ", ".join(["(" + var.split("=")[1] + ")" for var in lines])
+            + "]"
+        )
 
     output_lines = ["nonlineareq(u0,p) = begin"]
 
@@ -66,9 +86,15 @@ def translate_nonlinear_system_of_equations(
     nonlinear_guess_initials[number] = init_vals.copy()
 
     if len(inital_values) > 1:
-        startline = ", ".join([var.strip(r"//").split("(")[0].strip() for var in inital_values]) + " = u0"
+        startline = (
+            ", ".join([var.strip("/").split("(")[0].strip() for var in inital_values])
+            + " = u0"
+        )
     else:
-        startline = ", ".join([var.strip(r"//").split("(")[0].strip() for var in inital_values]) + " = u0[1]"
+        startline = (
+            ", ".join([var.strip("/").split("(")[0].strip() for var in inital_values])
+            + " = u0[1]"
+        )
     output_lines.append(startline)
 
     residuals_eq = []
@@ -97,11 +123,13 @@ def translate_nonlinear_system_of_equations(
 
     if len(inital_values) > 1:
         output_lines.append(
-            ", ".join([var.strip(r"//").split("(")[0].strip() for var in inital_values]) + " = sol.u"
+            ", ".join([var.strip("/").split("(")[0].strip() for var in inital_values])
+            + " = sol.u"
         )
     else:
         output_lines.append(
-            ", ".join([var.strip(r"//").split("(")[0].strip() for var in inital_values]) + " = sol.u[1]"
+            ", ".join([var.strip("/").split("(")[0].strip() for var in inital_values])
+            + " = sol.u[1]"
         )
 
     output_lines.extend([var for var in var_eqs if not var.startswith("##")])
@@ -109,11 +137,11 @@ def translate_nonlinear_system_of_equations(
 
 
 def Transform_structure_between_tags(
-    input_list: List[str],
+    input_list: list[str],
     start_tag: str,
     end_tag: str,
     trasnslator: Callable,
-) -> List[str]:
+) -> list[str]:
     output_list = []
     i = 0
     while i < len(input_list):
