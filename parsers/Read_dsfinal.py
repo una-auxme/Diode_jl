@@ -19,10 +19,13 @@ def extract_simulations_Settings(file_path: str) -> dict[str, float]:
         "Algorithm",
     ]
 
+    experiment_section_found = False
+
     with open(file_path) as file:
         lines = file.readlines()
         for i, line in enumerate(lines):
             if "double experiment(" in line:
+                experiment_section_found = True
                 counter = 0
                 form_start = 1
                 while counter < 7:
@@ -35,8 +38,13 @@ def extract_simulations_Settings(file_path: str) -> dict[str, float]:
                         pass
                     form_start += 1
                 break
+
+    if not experiment_section_found:
+        raise ValueError("Experiment section not found")
+
     if not all(key in simulation_settings for key in labels):
-        raise ValueError
+        raise ValueError("Required simulation settings missing")
+
     return simulation_settings
 
 

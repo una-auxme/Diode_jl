@@ -4,6 +4,11 @@ within ;
 // Licensed under the MIT license. See LICENSE file in the project root for details.
 //
 
+//
+// Copyright (c) 2026 Robert Weber,Leo Germer, Andreas Hofmann and contributors
+// Licensed under the MIT license. See LICENSE file in the project root for details.
+//
+
 package TranslatorModelle
 
   package Components
@@ -32,7 +37,7 @@ package TranslatorModelle
       Modelica.Blocks.Continuous.FirstOrder firstOrder(
         T = 1e-7,
         initType=Modelica.Blocks.Types.Init.InitialState,
-        y_start=12)                            annotation (Placement(transformation(extent={{90,-10},{110,10}})));
+        y_start=0)                             annotation (Placement(transformation(extent={{90,-10},{110,10}})));
 
     equation
       connect(pin_p, voltageSensor.p) annotation (Line(points={{-101,1},{-100,1},{-100,
@@ -169,8 +174,8 @@ package TranslatorModelle
           annotation (Placement(transformation(extent={{-152,52},{-132,72}})));
         Resistance_ShortCircuit resistance_ShortCircuit_TL
           annotation (Placement(transformation(extent={{-48,48},{-10,82}})));
-        Modelica.Electrical.Analog.Basic.Capacitor capacitorC2(v(fixed=true,
-              start=12),                                       C=consumer_S4_Rec.C2)
+        Modelica.Electrical.Analog.Basic.Capacitor capacitorC2(v(fixed=true),
+                                                               C=consumer_S4_Rec.C2)
           annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
@@ -181,7 +186,7 @@ package TranslatorModelle
               rotation=270,
               origin={-180,-48})));
         Modelica.Electrical.Analog.Basic.Capacitor capacitorC1(v(fixed=true,
-              start=12),                                       C=consumer_S4_Rec.C2)
+              start=0),                                        C=consumer_S4_Rec.C2)
           annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
@@ -397,8 +402,8 @@ package TranslatorModelle
           annotation (Placement(transformation(extent={{14,52},{34,72}})));
         Resistance_ShortCircuit resistance_ShortCircuit_TL
           annotation (Placement(transformation(extent={{-62,44},{-18,80}})));
-        Modelica.Electrical.Analog.Basic.Capacitor capacitorC(v(start=12, fixed
-              =true),                                         C=consumer_S4_Rec.C2)
+        Modelica.Electrical.Analog.Basic.Capacitor capacitorC(v(start=0, fixed=
+                true),                                        C=consumer_S4_Rec.C2)
           annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=270,
@@ -968,7 +973,7 @@ package TranslatorModelle
                 Line(points={{28,0},{98,0}},  color={0,0,255})}));
       end NonlinearDiode;
 
-      model Fuse1
+      model eFuse_Diode
 
         Modelica.Electrical.Analog.Basic.VariableResistor resistor(alpha=0,
             useHeatPort=false)
@@ -996,8 +1001,8 @@ package TranslatorModelle
           annotation (Placement(transformation(extent={{-84,76},{-64,96}})));
         Modelica.Blocks.Sources.RealExpression limit(y=120)
           annotation (Placement(transformation(extent={{-132,54},{-90,74}})));
-        Fuse.NonlinearDiode nonlinearDiode(Bv=32) annotation (Placement(
-              transformation(
+        .TranslatorModelle.Components.Fuse.NonlinearDiode nonlinearDiode(Bv=32, v(
+              start=0.0)) annotation (Placement(transformation(
               extent={{-10,-10},{10,10}},
               rotation=0,
               origin={0,-22})));
@@ -1056,9 +1061,9 @@ package TranslatorModelle
                 horizontalAlignment=TextAlignment.Left,
                 textString="Overcurrent Fault
 Detection")}));
-      end Fuse1;
+      end eFuse_Diode;
 
-      model Fuse2
+      model eFuse
         Modelica.Electrical.Analog.Basic.VariableResistor resistor(alpha=0,
             useHeatPort=false)
           annotation (Placement(transformation(extent={{-14,-14},{14,14}})));
@@ -1135,7 +1140,7 @@ Detection")}));
                 horizontalAlignment=TextAlignment.Left,
                 textString="Overcurrent Fault
 Detection")}));
-      end Fuse2;
+      end eFuse;
 
       model Resistance_Fuse
 
@@ -1181,7 +1186,7 @@ Detection")}));
     end Fuse;
 
     package Harness
-      model Cable
+      model Cable_upstream
         Modelica.Electrical.Analog.Interfaces.PositivePin
                     p "Positive electrical pin"
           annotation (Placement(transformation(extent={{-110,-10},{-90,10}})));
@@ -1248,7 +1253,7 @@ Detection")}));
                 thickness=1)}),                                        Diagram(
               coordinateSystem(preserveAspectRatio=false, extent={{-100,-60},{100,
                   60}})));
-      end Cable;
+      end Cable_upstream;
 
       model Harness_Rec
           extends Modelica.Icons.Record;
@@ -1323,17 +1328,86 @@ Detection")}));
                 thickness=1)}), Diagram(coordinateSystem(preserveAspectRatio=
                   false)));
       end GroundBolt;
+
+      model Cable_downstream
+         Modelica.Electrical.Analog.Interfaces.PositivePin
+                    p "Positive electrical pin"
+          annotation (Placement(transformation(extent={{-110,-10},{-90,10}})));
+        Modelica.Electrical.Analog.Interfaces.NegativePin
+                    n "Negative electrical pin"
+          annotation (Placement(transformation(extent={{90,-10},{110,10}})));
+        Modelica.Thermal.HeatTransfer.Celsius.FixedTemperature fixedTemperature(T=
+              harnessConfig.ambientTemperature) annotation (Placement(
+              transformation(
+              extent={{-12,-11.5},{12,11.5}},
+              rotation=90,
+              origin={-19.5,-40})));
+        Modelica.Electrical.Analog.Basic.Resistor contactResistance_p(R=
+              harnessConfig.contactResistance_p)
+          annotation (Placement(transformation(extent={{-74,-10},{-54,10}})));
+        Modelica.Electrical.Analog.Basic.Resistor contactResistance_n(R=
+              harnessConfig.contactResistance_n)
+          annotation (Placement(transformation(extent={{14,-10},{34,10}})));
+        Modelica.Electrical.Analog.Basic.Resistor cableResistor(R=harnessConfig.cableResistance,
+                                                                useHeatPort=true)
+          annotation (Placement(transformation(extent={{-38,-18},{-2,18}})));
+        Harness_Rec harnessConfig
+          annotation (Placement(transformation(extent={{76,-56},{96,-36}})));
+        Modelica.Electrical.Analog.Basic.Inductor inductor1(i(fixed=false),
+                                                            L=harnessConfig.L)
+          annotation (Placement(transformation(extent={{56,-10},{76,10}})));
+      equation
+        connect(contactResistance_p.p, p)
+          annotation (Line(points={{-74,0},{-100,0}},color={0,0,255}));
+        connect(cableResistor.heatPort, fixedTemperature.port) annotation (Line(
+              points={{-20,-18},{-19.5,-18},{-19.5,-28}}, color={191,0,0}));
+        connect(cableResistor.p, contactResistance_p.n)
+          annotation (Line(points={{-38,0},{-54,0}}, color={0,0,255}));
+        connect(cableResistor.n, contactResistance_n.p)
+          annotation (Line(points={{-2,0},{14,0}}, color={0,0,255}));
+        connect(contactResistance_n.n, inductor1.p)
+          annotation (Line(points={{34,0},{56,0}}, color={0,0,255}));
+        connect(inductor1.n, n)
+          annotation (Line(points={{76,0},{100,0}}, color={0,0,255}));
+        annotation (Icon(coordinateSystem(preserveAspectRatio=false, extent={{
+                  -100,-60},{100,60}}), graphics={
+              Rectangle(
+                extent={{-80,14},{-10,-12}},
+                fillColor={244,125,35},
+                fillPattern=FillPattern.Solid,
+                pattern=LinePattern.Dash,
+                lineThickness=0.5,
+                lineColor={135,135,135}),
+              Rectangle(
+                extent={{6,14},{80,-12}},
+                lineColor={0,0,0},
+                lineThickness=1),
+              Line(
+                points={{-90,0},{-80,0}},
+                color={0,0,0},
+                thickness=1),
+              Line(
+                points={{-10,0},{6,0}},
+                color={0,0,0},
+                thickness=1),
+              Line(
+                points={{90,0},{80,0}},
+                color={0,0,0},
+                thickness=1)}),                                        Diagram(
+              coordinateSystem(preserveAspectRatio=false, extent={{-100,-60},{100,
+                  60}})));
+      end Cable_downstream;
     end Harness;
   end Components;
 
   package Models
     model scConsumer_Translator
-      Modelica.Electrical.Analog.Sources.ConstantVoltage G1_BATTERIE(V=12)
+      Modelica.Electrical.Analog.Sources.ConstantVoltage battery_1(V=12)
         annotation (Placement(transformation(extent={{-352,124},{-332,144}})));
-      Components.Harness.Cable cable(harnessConfig(cableResistance=1.75e-4, L=
-              1.544e-7))
+      Components.Harness.Cable_upstream cable(harnessConfig(cableResistance=1.75e-4,
+            L=1.544e-7))
         annotation (Placement(transformation(extent={{-378,-56},{-344,-36}})));
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_1
+      Components.Fuse.eFuse conventionalFuse_Stage3_1
         annotation (Placement(transformation(extent={{-284,-64},{-230,-26}})));
 
       Components.Consumer.dummyLoad dummyLoad annotation (Placement(
@@ -1341,38 +1415,38 @@ Detection")}));
             extent={{10,-10},{-10,10}},
             rotation=180,
             origin={-274,-74})));
-      Components.Harness.Cable cable1(harnessConfig(cableResistance=0.001194, L
-            =0.650e-6))
+      Components.Harness.Cable_upstream cable1(harnessConfig(cableResistance=0.001194,
+            L=0.650e-6))
         annotation (Placement(transformation(extent={{-230,-56},{-196,-36}})));
-      Components.Harness.Cable cable2(harnessConfig(cableResistance=0.001258, L
-            =0.6853e-6))
+      Components.Harness.Cable_downstream cable2(harnessConfig(cableResistance=0.001258,
+            L=0.6853e-6))
         annotation (Placement(transformation(extent={{-106,-56},{-72,-36}})));
-      Components.Harness.Cable cable3(harnessConfig(cableResistance=0.0002, L=
-              1.845e-7))
+      Components.Harness.Cable_upstream cable3(harnessConfig(cableResistance=0.0002,
+            L=1.845e-7))
         annotation (Placement(transformation(extent={{-354,212},{-320,232}})));
-      Components.Harness.Cable cable4(harnessConfig(cableResistance=0.020, L=
-              1.8075e-6))
+      Components.Harness.Cable_upstream cable4(harnessConfig(cableResistance=0.020,
+            L=1.8075e-6))
         annotation (Placement(transformation(extent={{-32,176},{2,196}})));
-      Components.Harness.Cable cable5(harnessConfig(cableResistance=0.02144, L=
-              1.87222e-6))
+      Components.Harness.Cable_downstream cable5(harnessConfig(cableResistance=0.02144,
+            L=1.87222e-6))
         annotation (Placement(transformation(extent={{92,176},{126,196}})));
-      Components.Harness.Cable cable6(harnessConfig(cableResistance=0.0111, L=
-              2.0e-6))
+      Components.Harness.Cable_upstream cable6(harnessConfig(cableResistance=0.0111,
+            L=2.0e-6))
         annotation (Placement(transformation(extent={{-32,140},{2,160}})));
-      Components.Harness.Cable cable7(harnessConfig(cableResistance=0.0047, L=
-              0.85e-6))
+      Components.Harness.Cable_downstream cable7(harnessConfig(cableResistance=0.0047,
+            L=0.85e-6))
         annotation (Placement(transformation(extent={{92,140},{126,160}})));
-      Components.Harness.Cable cable8(harnessConfig(cableResistance=0.0026, L=
-              1.04667e-6))
+      Components.Harness.Cable_upstream cable8(harnessConfig(cableResistance=0.0026,
+            L=1.04667e-6))
         annotation (Placement(transformation(extent={{-32,104},{2,124}})));
-      Components.Harness.Cable cable9(harnessConfig(cableResistance=0.0003437,
+      Components.Harness.Cable_downstream cable9(harnessConfig(cableResistance=0.0003437,
             L=0.134032e-6))
         annotation (Placement(transformation(extent={{92,104},{126,124}})));
-      Components.Harness.Cable cable14(harnessConfig(cableResistance=0.0179, L=
-              1.56e-6))
+      Components.Harness.Cable_upstream cable14(harnessConfig(cableResistance=0.0179,
+            L=1.56e-6))
         annotation (Placement(transformation(extent={{-32,212},{2,232}})));
-      Components.Harness.Cable cable15(harnessConfig(cableResistance=0.01915, L
-            =1.5e-6))
+      Components.Harness.Cable_downstream cable15(harnessConfig(cableResistance=0.01915,
+            L=1.5e-6))
         annotation (Placement(transformation(extent={{92,212},{126,232}})));
       Components.Consumer.dummyLoad dummyLoad1 annotation (Placement(
             transformation(
@@ -1386,8 +1460,8 @@ Detection")}));
             origin={-118,170})));
       Components.Harness.GroundBolt groundBolt1
         annotation (Placement(transformation(extent={{178,210},{200,234}})));
-      Components.Harness.Cable cable10(harnessConfig(L=0.37e-6)) annotation (
-          Placement(transformation(
+      Components.Harness.Cable_downstream cable10(harnessConfig(L=0.37e-6))
+        annotation (Placement(transformation(
             extent={{-16,-11},{16,11}},
             rotation=90,
             origin={171,144})));
@@ -1397,49 +1471,49 @@ Detection")}));
         annotation (Placement(transformation(extent={{178,174},{200,198}})));
       Components.Harness.GroundBolt groundBolt4
         annotation (Placement(transformation(extent={{-282,122},{-260,146}})));
-      Components.Harness.Cable cable11(harnessConfig(cableResistance=5.162e-5,
+      Components.Harness.Cable_downstream cable11(harnessConfig(cableResistance=5.162e-5,
             L=4.55e-8))
         annotation (Placement(transformation(extent={{-324,124},{-290,144}})));
-      Components.Harness.Cable cable22(harnessConfig(cableResistance=0.1386, L=
-              2.231e-6))
+      Components.Harness.Cable_upstream cable22(harnessConfig(cableResistance=0.1386,
+            L=2.231e-6))
         annotation (Placement(transformation(extent={{-46,-242},{-12,-222}})));
-      Components.Harness.Cable cable23(harnessConfig(cableResistance=0.09896, L
-            =1.59288e-6))
+      Components.Harness.Cable_downstream cable23(harnessConfig(cableResistance=0.09896,
+            L=1.59288e-6))
         annotation (Placement(transformation(extent={{78,-242},{112,-222}})));
-      Components.Harness.Cable cable24(harnessConfig(cableResistance=0.0136, L=
-              1.1891e-6))
+      Components.Harness.Cable_upstream cable24(harnessConfig(cableResistance=0.0136,
+            L=1.1891e-6))
         annotation (Placement(transformation(extent={{-46,-278},{-12,-258}})));
-      Components.Harness.Cable cable25(harnessConfig(cableResistance=0.0049, L=
-              0.42951e-6))
+      Components.Harness.Cable_downstream cable25(harnessConfig(cableResistance=0.0049,
+            L=0.42951e-6))
         annotation (Placement(transformation(extent={{78,-278},{112,-258}})));
-      Components.Harness.Cable cable26(harnessConfig(cableResistance=0.0084, L=
-              0.73533e-6))
+      Components.Harness.Cable_upstream cable26(harnessConfig(cableResistance=0.0084,
+            L=0.73533e-6))
         annotation (Placement(transformation(extent={{-46,-314},{-12,-294}})));
-      Components.Harness.Cable cable27(harnessConfig(cableResistance=0.0113, L=
-              0.9889e-6))
+      Components.Harness.Cable_downstream cable27(harnessConfig(cableResistance=0.0113,
+            L=0.9889e-6))
         annotation (Placement(transformation(extent={{78,-314},{112,-294}})));
-      Components.Harness.Cable cable28(harnessConfig(cableResistance=0.025, L=
-              2.269e-6))
+      Components.Harness.Cable_upstream cable28(harnessConfig(cableResistance=0.025,
+            L=2.269e-6))
         annotation (Placement(transformation(extent={{-46,-206},{-12,-186}})));
-      Components.Harness.Cable cable29(harnessConfig(cableResistance=0.0076, L=
-              0.6669e-6))
+      Components.Harness.Cable_downstream cable29(harnessConfig(cableResistance=0.0076,
+            L=0.6669e-6))
         annotation (Placement(transformation(extent={{78,-206},{112,-186}})));
-      Components.Harness.Cable cable30(harnessConfig(cableResistance=0.1493, L=
-              4.66958e-6))
+      Components.Harness.Cable_upstream cable30(harnessConfig(cableResistance=0.1493,
+            L=4.66958e-6))
         annotation (Placement(transformation(extent={{-46,-386},{-12,-366}})));
-      Components.Harness.Cable cable31(harnessConfig(cableResistance=0.044, L=
-              1.3761e-6))
+      Components.Harness.Cable_downstream cable31(harnessConfig(cableResistance=0.044,
+            L=1.3761e-6))
         annotation (Placement(transformation(extent={{78,-386},{112,-366}})));
-      Components.Harness.Cable cable32(harnessConfig(L=2.7152e-6))
+      Components.Harness.Cable_upstream cable32(harnessConfig(L=2.7152e-6))
         annotation (Placement(transformation(extent={{-46,-422},{-12,-402}})));
-      Components.Harness.Cable cable33(harnessConfig(cableResistance=0.047, L=
-              1.1343e-6))
+      Components.Harness.Cable_downstream cable33(harnessConfig(cableResistance=0.047,
+            L=1.1343e-6))
         annotation (Placement(transformation(extent={{78,-422},{112,-402}})));
-      Components.Harness.Cable cable36(harnessConfig(cableResistance=0.02044, L
-            =1.7845e-6))
+      Components.Harness.Cable_upstream cable36(harnessConfig(cableResistance=0.02044,
+            L=1.7845e-6))
         annotation (Placement(transformation(extent={{-46,-350},{-12,-330}})));
-      Components.Harness.Cable cable37(harnessConfig(cableResistance=0.00352, L
-            =0.3076e-6))
+      Components.Harness.Cable_downstream cable37(harnessConfig(cableResistance=0.00352,
+            L=0.3076e-6))
         annotation (Placement(transformation(extent={{78,-350},{112,-330}})));
       Components.Consumer.dummyLoad dummyLoad3 annotation (Placement(
             transformation(
@@ -1456,19 +1530,19 @@ Detection")}));
             extent={{10,-10},{-10,10}},
             rotation=180,
             origin={-128,-356})));
-      Components.Fuse.Fuse2 eFuse_S2_2 annotation (Placement(transformation(
+      Components.Fuse.eFuse eFuse_S2_2 annotation (Placement(transformation(
             extent={{-14,-8},{14,8}},
             rotation=0,
             origin={-212,-232})));
-      Components.Fuse.Fuse2 eFuse_S2_3 annotation (Placement(transformation(
+      Components.Fuse.eFuse eFuse_S2_3 annotation (Placement(transformation(
             extent={{-14,-8},{14,8}},
             rotation=0,
             origin={-212,-340})));
-      Components.Fuse.Fuse2 eFuse_S2_4 annotation (Placement(transformation(
+      Components.Fuse.eFuse eFuse_S2_4 annotation (Placement(transformation(
             extent={{-14,-8},{14,8}},
             rotation=0,
             origin={-212,-268})));
-      Components.Fuse.Fuse2 eFuse_S2_5 annotation (Placement(transformation(
+      Components.Fuse.eFuse eFuse_S2_5 annotation (Placement(transformation(
             extent={{-14,-8},{14,8}},
             rotation=0,
             origin={-212,-412})));
@@ -1490,11 +1564,11 @@ Detection")}));
       Components.Harness.GroundBolt groundBolt10
         annotation (Placement(transformation(extent={{150,-388},{172,-364}})));
       Modelica.Electrical.Analog.Basic.Ground ground
-        annotation (Placement(transformation(extent={{-272,62},{-224,110}})));
-      Components.Harness.Cable cable34(harnessConfig(cableResistance=0.00253, L
-            =0.2212e-6))
+        annotation (Placement(transformation(extent={{-270,62},{-222,110}})));
+      Components.Harness.Cable_upstream cable34(harnessConfig(cableResistance=0.00253,
+            L=0.2212e-6))
         annotation (Placement(transformation(extent={{144,-170},{178,-150}})));
-      Modelica.Electrical.Analog.Sources.ConstantVoltage battery(V=12.5)
+      Modelica.Electrical.Analog.Sources.ConstantVoltage battery_2(V=12.5)
         annotation (Placement(transformation(extent={{-346,-226},{-326,-206}})));
       Components.Harness.GroundBolt groundBolt11
         annotation (Placement(transformation(extent={{-52,-58},{-30,-34}})));
@@ -1503,41 +1577,41 @@ Detection")}));
             extent={{10,-10},{-10,10}},
             rotation=180,
             origin={470,258})));
-      Components.Harness.Cable cable35(harnessConfig(cableResistance=0.1017, L=
-              1.637e-6))
+      Components.Harness.Cable_upstream cable35(harnessConfig(cableResistance=0.1017,
+            L=1.637e-6))
         annotation (Placement(transformation(extent={{468,-226},{502,-206}})));
-      Components.Harness.Cable cable39(harnessConfig(cableResistance=0.0906, L=
-              1.4586e-6))
+      Components.Harness.Cable_downstream cable39(harnessConfig(cableResistance=0.0906,
+            L=1.4586e-6))
         annotation (Placement(transformation(extent={{592,-262},{626,-242}})));
-      Components.Harness.Cable cable40(harnessConfig(cableResistance=0.144, L=
-              2.31811e-6))
+      Components.Harness.Cable_upstream cable40(harnessConfig(cableResistance=0.144,
+            L=2.31811e-6))
         annotation (Placement(transformation(extent={{468,-262},{502,-242}})));
-      Components.Harness.Cable cable41(harnessConfig(cableResistance=0.1320, L=
-              2.1257e-6))
+      Components.Harness.Cable_downstream cable41(harnessConfig(cableResistance=0.1320,
+            L=2.1257e-6))
         annotation (Placement(transformation(extent={{592,-298},{626,-278}})));
-      Components.Harness.Cable cable42(harnessConfig(cableResistance=0.1628, L=
-              2.6217e-6))
+      Components.Harness.Cable_upstream cable42(harnessConfig(cableResistance=0.1628,
+            L=2.6217e-6))
         annotation (Placement(transformation(extent={{468,-298},{502,-278}})));
-      Components.Harness.Cable cable43(harnessConfig(cableResistance=0.0021, L=
-              0.1864e-6))
+      Components.Harness.Cable_downstream cable43(harnessConfig(cableResistance=0.0021,
+            L=0.1864e-6))
         annotation (Placement(transformation(extent={{592,-334},{626,-314}})));
-      Components.Harness.Cable cable44(harnessConfig(cableResistance=199e-3, L=
-              3.076e-6))
+      Components.Harness.Cable_upstream cable44(harnessConfig(cableResistance=199e-3,
+            L=3.076e-6))
         annotation (Placement(transformation(extent={{468,-190},{502,-170}})));
-      Components.Harness.Cable cable45(harnessConfig(cableResistance=0.1017, L=
-              1.637e-6))
+      Components.Harness.Cable_downstream cable45(harnessConfig(cableResistance=0.1017,
+            L=1.637e-6))
         annotation (Placement(transformation(extent={{592,-226},{626,-206}})));
-      Components.Harness.Cable cable46(harnessConfig(cableResistance=0.0111, L=
-              0.969e-6))
+      Components.Harness.Cable_upstream cable46(harnessConfig(cableResistance=0.0111,
+            L=0.969e-6))
         annotation (Placement(transformation(extent={{468,-334},{502,-314}})));
-      Components.Harness.Cable cable47(harnessConfig(cableResistance=0.03039, L
-            =1.723e-6))
+      Components.Harness.Cable_downstream cable47(harnessConfig(cableResistance=0.03039,
+            L=1.723e-6))
         annotation (Placement(transformation(extent={{592,-370},{626,-350}})));
-      Components.Harness.Cable cable48(harnessConfig(cableResistance=0.0751, L=
-              2.3507e-6))
+      Components.Harness.Cable_upstream cable48(harnessConfig(cableResistance=0.0751,
+            L=2.3507e-6))
         annotation (Placement(transformation(extent={{468,-370},{502,-350}})));
-      Components.Harness.Cable cable49(harnessConfig(cableResistance=0.0342, L=
-              1.07034e-6))
+      Components.Harness.Cable_downstream cable49(harnessConfig(cableResistance=0.0342,
+            L=1.07034e-6))
         annotation (Placement(transformation(extent={{592,-406},{626,-386}})));
       Components.Consumer.dummyLoad dummyLoad8 annotation (Placement(
             transformation(
@@ -1569,40 +1643,40 @@ Detection")}));
             extent={{10,-10},{-10,10}},
             rotation=180,
             origin={394,-410})));
-      Components.Harness.Cable cable50(harnessConfig(cableResistance=0.1396, L=
-              4.3689e-6))
+      Components.Harness.Cable_downstream cable50(harnessConfig(cableResistance=0.1396,
+            L=4.3689e-6))
         annotation (Placement(transformation(extent={{284,-408},{318,-388}})));
-      Components.Harness.Cable cable51(harnessConfig(cableResistance=0.003, L=
-              0.5404e-6))
+      Components.Harness.Cable_downstream cable51(harnessConfig(cableResistance=0.003,
+            L=0.5404e-6))
         annotation (Placement(transformation(extent={{296,-266},{330,-246}})));
-      Components.Harness.Cable cable52(harnessConfig(cableResistance=0.003, L=
-              0.5377e-6))
+      Components.Harness.Cable_downstream cable52(harnessConfig(cableResistance=0.003,
+            L=0.5377e-6))
         annotation (Placement(transformation(extent={{296,-340},{330,-320}})));
-      Components.Harness.Cable cable53(harnessConfig(cableResistance=0.003, L=
-              0.538e-6))
+      Components.Harness.Cable_downstream cable53(harnessConfig(cableResistance=0.003,
+            L=0.538e-6))
         annotation (Placement(transformation(extent={{296,-298},{330,-278}})));
-      Components.Harness.Cable cable54(harnessConfig(cableResistance=0.003, L=
-              0.5446e-6))
+      Components.Harness.Cable_downstream cable54(harnessConfig(cableResistance=0.003,
+            L=0.5446e-6))
         annotation (Placement(transformation(extent={{296,-228},{330,-208}})));
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_23 annotation (Placement(
+      Components.Fuse.eFuse conventionalFuse_Stage3_23 annotation (Placement(
             transformation(
             extent={{-27,-19},{27,19}},
             rotation=180,
             origin={495,179})));
 
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_24 annotation (Placement(
+      Components.Fuse.eFuse conventionalFuse_Stage3_24 annotation (Placement(
             transformation(
             extent={{-27,-19},{27,19}},
             rotation=180,
             origin={495,137})));
 
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_25 annotation (Placement(
+      Components.Fuse.eFuse conventionalFuse_Stage3_25 annotation (Placement(
             transformation(
             extent={{-27,-19},{27,19}},
             rotation=180,
             origin={495,99})));
 
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_26 annotation (Placement(
+      Components.Fuse.eFuse conventionalFuse_Stage3_26 annotation (Placement(
             transformation(
             extent={{-27,-19},{27,19}},
             rotation=180,
@@ -1616,43 +1690,43 @@ Detection")}));
         annotation (Placement(transformation(extent={{680,-300},{702,-276}})));
       Components.Harness.GroundBolt groundBolt15
         annotation (Placement(transformation(extent={{680,-336},{702,-312}})));
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_27
+      Components.Fuse.eFuse conventionalFuse_Stage3_27
         annotation (Placement(transformation(extent={{976,-46},{1030,-8}})));
-      Components.Harness.Cable cable55(harnessConfig(cableResistance=0.01948, L
-            =1.71e-6))
+      Components.Harness.Cable_upstream cable55(harnessConfig(cableResistance=0.01948,
+            L=1.71e-6))
         annotation (Placement(transformation(extent={{1030,-38},{1064,-18}})));
-      Components.Harness.Cable cable56(harnessConfig(cableResistance=0.0111, L=
-              0.98e-6))
+      Components.Harness.Cable_downstream cable56(harnessConfig(cableResistance=0.0111,
+            L=0.98e-6))
         annotation (Placement(transformation(extent={{1154,-38},{1188,-18}})));
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_28
+      Components.Fuse.eFuse conventionalFuse_Stage3_28
         annotation (Placement(transformation(extent={{974,-226},{1028,-188}})));
 
-      Components.Harness.Cable cable57(harnessConfig(cableResistance=0.0194, L=
-              0.676e-6)) annotation (Placement(transformation(extent={{1028,-218},
-                {1062,-198}})));
-      Components.Harness.Cable cable58(harnessConfig(cableResistance=0.0111, L=
-              0.2736e-6)) annotation (Placement(transformation(extent={{1152,-218},
-                {1186,-198}})));
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_29
+      Components.Harness.Cable_upstream cable57(harnessConfig(cableResistance=0.0194,
+            L=0.676e-6))
+        annotation (Placement(transformation(extent={{1028,-218},{1062,-198}})));
+      Components.Harness.Cable_downstream cable58(harnessConfig(cableResistance=0.0111,
+            L=0.2736e-6))
+        annotation (Placement(transformation(extent={{1152,-218},{1186,-198}})));
+      Components.Fuse.eFuse conventionalFuse_Stage3_29
         annotation (Placement(transformation(extent={{974,-402},{1028,-364}})));
-      Components.Harness.Cable cable59(harnessConfig(cableResistance=0.0025, L=
-              0.6768e-6)) annotation (Placement(transformation(extent={{1028,-394},
-                {1062,-374}})));
-      Components.Harness.Cable cable60(harnessConfig(cableResistance=0.001, L=
-              0.2736e-6)) annotation (Placement(transformation(extent={{1152,-394},
-                {1186,-374}})));
-      Components.Harness.Cable cable61(harnessConfig(cableResistance=0.0003, L=
-              0.2113e-6)) annotation (Placement(transformation(
+      Components.Harness.Cable_upstream cable59(harnessConfig(cableResistance=0.0025,
+            L=0.6768e-6))
+        annotation (Placement(transformation(extent={{1028,-394},{1062,-374}})));
+      Components.Harness.Cable_downstream cable60(harnessConfig(cableResistance=0.001,
+            L=0.2736e-6))
+        annotation (Placement(transformation(extent={{1152,-394},{1186,-374}})));
+      Components.Harness.Cable_downstream cable61(harnessConfig(cableResistance=0.0003,
+            L=0.2113e-6)) annotation (Placement(transformation(
             extent={{-17,-10},{17,10}},
             rotation=180,
             origin={807,178})));
-      Components.Harness.Cable cable62(harnessConfig(cableResistance=0.0001, L=
-              0.0757e-6)) annotation (Placement(transformation(
+      Components.Harness.Cable_downstream cable62(harnessConfig(cableResistance=0.0001,
+            L=0.0757e-6)) annotation (Placement(transformation(
             extent={{-17,-10},{17,10}},
             rotation=180,
             origin={815,98})));
-      Components.Harness.Cable cable63(harnessConfig(cableResistance=0.0004, L=
-              0.2333e-6)) annotation (Placement(transformation(
+      Components.Harness.Cable_downstream cable63(harnessConfig(cableResistance=0.0004,
+            L=0.2333e-6)) annotation (Placement(transformation(
             extent={{-17,-10},{17,10}},
             rotation=180,
             origin={903,-268})));
@@ -1673,20 +1747,20 @@ Detection")}));
             extent={{10,-10},{-10,10}},
             rotation=180,
             origin={1046,-50})));
-      Components.Fuse.Fuse2 conventionalFuse_Stage3_30 annotation (Placement(
+      Components.Fuse.eFuse conventionalFuse_Stage3_30 annotation (Placement(
             transformation(
             extent={{-26,-20},{26,20}},
             rotation=180,
-            origin={946,-270})));
+            origin={946,-268})));
 
       Components.Harness.GroundBolt groundBolt17 annotation (Placement(
             transformation(extent={{1234,-220},{1256,-196}})));
       Components.Harness.GroundBolt groundBolt18
         annotation (Placement(transformation(extent={{1216,-40},{1238,-16}})));
-      Components.Harness.Cable cable12(harnessConfig(cableResistance=0.000228,
+      Components.Harness.Cable_downstream cable12(harnessConfig(cableResistance=0.000228,
             L=0.2018e-6))
         annotation (Placement(transformation(extent={{362,206},{396,226}})));
-      Components.Fuse.Fuse2 eFuse_S2_1 annotation (Placement(transformation(
+      Components.Fuse.eFuse eFuse_S2_1 annotation (Placement(transformation(
             extent={{-14,-8},{14,8}},
             rotation=0,
             origin={1034,276})));
@@ -1694,71 +1768,74 @@ Detection")}));
             extent={{-10,-10},{10,10}},
             rotation=0,
             origin={986,276})));
-      Components.AbsolutePotential absolutePotential annotation (Placement(
+      Components.AbsolutePotential absolutePotential(firstOrder(initType=
+              Modelica.Blocks.Types.Init.InitialState, y_start=0))
+                                                     annotation (Placement(
             transformation(extent={{-15,-12},{15,12}}, origin={963,242})));
       Modelica.Electrical.Analog.Sensors.CurrentSensor currentSensor2
                                                                      annotation (Placement(transformation(
             extent={{-10,-10},{10,10}},
             rotation=0,
             origin={996,156})));
-      Components.Fuse.Fuse2 eFuse_S2_6 annotation (Placement(transformation(
+      Components.Fuse.eFuse eFuse_S2_6 annotation (Placement(transformation(
             extent={{-14,-8},{14,8}},
             rotation=0,
             origin={1048,156})));
       Components.AbsolutePotential absolutePotential1 annotation (Placement(
             transformation(extent={{-15,-12},{15,12}}, origin={971,136})));
-      Components.Harness.Cable cable13(harnessConfig(cableResistance=0.1396, L=
-              4.368e-6))
+      Components.Harness.Cable_downstream cable13(harnessConfig(cableResistance=0.1396,
+            L=4.368e-6))
         annotation (Placement(transformation(extent={{296,-374},{330,-354}})));
-      Components.Fuse.Fuse2 eFuse_S2_7
+      Components.Fuse.eFuse eFuse_S2_7
         annotation (Placement(transformation(extent={{-74,214},{-46,230}})));
-      Components.Fuse.Fuse1 eFuse_S2_8(limit(y=98))
+      Components.Fuse.eFuse_Diode eFuse_S2_8(limit(y=98), resistance_Fuse_TL(t1(
+             fixed=false)))
         annotation (Placement(transformation(extent={{-74,178},{-46,194}})));
-      Components.Fuse.Fuse2 eFuse_S2_9
+      Components.Fuse.eFuse eFuse_S2_9
         annotation (Placement(transformation(extent={{-74,142},{-46,158}})));
-      Components.Fuse.Fuse2 eFuse_S2_10
+      Components.Fuse.eFuse eFuse_S2_10
         annotation (Placement(transformation(extent={{-74,106},{-46,122}})));
-      Components.Fuse.Fuse2 eFuse_S2_11
+      Components.Fuse.eFuse eFuse_S2_11
         annotation (Placement(transformation(extent={{426,-188},{454,-172}})));
-      Components.Fuse.Fuse2 eFuse_S2_12
+      Components.Fuse.eFuse eFuse_S2_12
         annotation (Placement(transformation(extent={{428,-224},{456,-208}})));
-      Components.Fuse.Fuse2 eFuse_S2_13
+      Components.Fuse.eFuse eFuse_S2_13
         annotation (Placement(transformation(extent={{426,-260},{454,-244}})));
-      Components.Fuse.Fuse2 eFuse_S2_14
+      Components.Fuse.eFuse eFuse_S2_14
         annotation (Placement(transformation(extent={{426,-296},{454,-280}})));
-      Components.Fuse.Fuse2 eFuse_S2_15
+      Components.Fuse.eFuse eFuse_S2_15
         annotation (Placement(transformation(extent={{426,-332},{454,-316}})));
-      Components.Fuse.Fuse2 eFuse_S2_17
+      Components.Fuse.eFuse eFuse_S2_17
         annotation (Placement(transformation(extent={{-88,-204},{-60,-188}})));
-      Components.Fuse.Fuse2 eFuse_S2_18
+      Components.Fuse.eFuse eFuse_S2_18
         annotation (Placement(transformation(extent={{-88,-240},{-60,-224}})));
-      Components.Fuse.Fuse2 eFuse_S2_19
+      Components.Fuse.eFuse eFuse_S2_19
         annotation (Placement(transformation(extent={{-88,-276},{-60,-260}})));
-      Components.Fuse.Fuse2 eFuse_S2_20
+      Components.Fuse.eFuse eFuse_S2_20
         annotation (Placement(transformation(extent={{-88,-312},{-60,-296}})));
-      Components.Fuse.Fuse2 eFuse_S2_21
+      Components.Fuse.eFuse eFuse_S2_21
         annotation (Placement(transformation(extent={{-88,-348},{-60,-332}})));
-      Components.Fuse.Fuse2 eFuse_S2_22
+      Components.Fuse.eFuse eFuse_S2_22
         annotation (Placement(transformation(extent={{-88,-384},{-60,-368}})));
-      Components.Fuse.Fuse2 eFuse_S2_23
+      Components.Fuse.eFuse eFuse_S2_23
         annotation (Placement(transformation(extent={{-88,-420},{-60,-404}})));
-      Components.Harness.Cable cable16(harnessConfig(cableResistance=0.01, L=
-              1.291e-6)) annotation (Placement(transformation(extent={{-192,-422},
-                {-158,-402}})));
-      Components.Harness.Cable cable17(harnessConfig(cableResistance=0.007, L=
-              1.26e-6)) annotation (Placement(transformation(extent={{-192,-242},
-                {-158,-222}})));
-      Components.Harness.Cable cable18(harnessConfig(cableResistance=0.01, L=
-              1.2951e-6)) annotation (Placement(transformation(extent={{-192,-278},
-                {-158,-258}})));
-      Components.Harness.Cable cable19(harnessConfig(cableResistance=0.0066, L=
-              1.19979e-6)) annotation (Placement(transformation(extent={{-192,-350},
-                {-158,-330}})));
-      Components.Harness.Cable cable20(harnessConfig(cableResistance=0.0486, L=
-              1.5201e-6))
+      Components.Harness.Cable_downstream cable16(harnessConfig(cableResistance=0.01,
+            L=1.291e-6))
+        annotation (Placement(transformation(extent={{-192,-422},{-158,-402}})));
+      Components.Harness.Cable_downstream cable17(harnessConfig(cableResistance=0.007,
+            L=1.26e-6))
+        annotation (Placement(transformation(extent={{-192,-242},{-158,-222}})));
+      Components.Harness.Cable_downstream cable18(harnessConfig(cableResistance=0.01,
+            L=1.2951e-6))
+        annotation (Placement(transformation(extent={{-192,-278},{-158,-258}})));
+      Components.Harness.Cable_downstream cable19(harnessConfig(cableResistance=0.0066,
+            L=1.19979e-6))
+        annotation (Placement(transformation(extent={{-192,-350},{-158,-330}})));
+      Components.Harness.Cable_upstream cable20(harnessConfig(cableResistance=0.0486,
+            L=1.5201e-6))
         annotation (Placement(transformation(extent={{468,-406},{502,-386}})));
-      Components.Harness.Cable cable21(harnessConfig(cableResistance=0.1624, L=
-              2.61e-6))
+      Components.Harness.Cable_downstream cable21(harnessConfig(cableResistance=0.1624,
+            L=2.61e-6))
         annotation (Placement(transformation(extent={{592,-190},{626,-170}})));
       Components.Consumer.Consumer_S4_PhiInput consumer_S4_PhiInput(
           consumer_S4_Rec(
@@ -1944,7 +2021,7 @@ Detection")}));
           R_consumer=6.73))
         annotation (Placement(transformation(extent={{510,-194},{580,-164}})));
     equation
-      connect(G1_BATTERIE.p, cable.p) annotation (Line(
+      connect(battery_1.p, cable.p) annotation (Line(
           points={{-352,134},{-386,134},{-386,-46},{-378,-46}},
           color={0,0,255},
           thickness=1));
@@ -1954,7 +2031,7 @@ Detection")}));
           thickness=1));
       connect(conventionalFuse_Stage3_1.n, cable1.p) annotation (Line(points={{
               -237.714,-45},{-237.714,-46},{-230,-46}},      color={0,0,255}));
-      connect(G1_BATTERIE.p, cable3.p) annotation (Line(
+      connect(battery_1.p, cable3.p) annotation (Line(
           points={{-352,134},{-388,134},{-388,222},{-354,222}},
           color={0,0,255},
           thickness=1));
@@ -1970,7 +2047,7 @@ Detection")}));
               171,186},{178,186}}, color={0,0,0}));
       connect(groundBolt4.p, cable11.n)
         annotation (Line(points={{-282,134},{-290,134}}, color={0,0,255}));
-      connect(G1_BATTERIE.n, cable11.p)
+      connect(battery_1.n, cable11.p)
         annotation (Line(points={{-332,134},{-324,134}}, color={0,0,255}));
       connect(groundBolt4.n, groundBolt2.n) annotation (Line(
           points={{-260,134},{-206,134},{-206,52},{242,52},{242,186},{200,186}},
@@ -1998,7 +2075,7 @@ Detection")}));
       connect(groundBolt6.p, cable33.n) annotation (Line(points={{150,-196},{
               134,-196},{134,-412},{112,-412}}, color={0,0,0}));
       connect(groundBolt4.n, ground.p) annotation (Line(points={{-260,134},{
-              -248,134},{-248,110}}, color={0,0,0},
+              -246,134},{-246,110}}, color={0,0,0},
           thickness=1));
       connect(cable34.n, groundBolt5.p)
         annotation (Line(points={{178,-160},{186,-160}}, color={0,0,255}));
@@ -2122,12 +2199,12 @@ Detection")}));
           thickness=1));
       connect(conventionalFuse_Stage3_30.p, conventionalFuse_Stage3_28.p)
         annotation (Line(
-          points={{964.571,-270},{972,-270},{972,-208},{981.714,-208},{981.714,
+          points={{964.571,-268},{972,-268},{972,-208},{981.714,-208},{981.714,
               -207}},
           color={0,0,255},
           thickness=1));
       connect(conventionalFuse_Stage3_30.n, cable63.p) annotation (Line(
-            points={{927.429,-270},{927.429,-268},{920,-268}},   color={0,0,
+            points={{927.429,-268},{920,-268}},                  color={0,0,
               255}));
       connect(dummyLoad15.n, groundBolt2.n) annotation (Line(
           points={{1058,-236},{1260,-236},{1260,-452},{794,-452},{794,-24},{
@@ -2170,9 +2247,9 @@ Detection")}));
           color={0,0,0},
           thickness=1));
 
-      connect(battery.n, groundBolt2.n) annotation (Line(
-          points={{-326,-216},{-250,-216},{-250,-86},{-20,-86},{-20,52},{242,52},{242,
-              186},{200,186}},
+      connect(battery_2.n, groundBolt2.n) annotation (Line(
+          points={{-326,-216},{-250,-216},{-250,-86},{-20,-86},{-20,52},{242,52},
+              {242,186},{200,186}},
           color={0,0,0},
           thickness=1));
       connect(dummyLoad6.n, groundBolt2.n) annotation (Line(
@@ -2225,7 +2302,7 @@ Detection")}));
           color={0,0,255},
           thickness=1));
 
-      connect(battery.p, conventionalFuse_Stage3_1.p) annotation (Line(
+      connect(battery_2.p, conventionalFuse_Stage3_1.p) annotation (Line(
           points={{-346,-216},{-412,-216},{-412,-154},{-308,-154},{-308,-46},{
               -286,-46},{-286,-45},{-276.286,-45}},
           color={0,0,255},
@@ -2669,7 +2746,7 @@ Detection")}));
               textString="Short
 Circuit",     horizontalAlignment=TextAlignment.Left)}),
         experiment(
-          StopTime=0.25,
+          StopTime=0.003,
           Interval=1e-06,
           Tolerance=1e-06,
           __Dymola_Algorithm="Dassl"),
@@ -2678,14 +2755,34 @@ Circuit",     horizontalAlignment=TextAlignment.Left)}),
           Advanced(
             GenerateAnalyticJacobian=false,
             GenerateVariableDependencies=true,
-            OutputModelicaCode=false),
+            OutputModelicaCode=true),
           Evaluate=false,
           OutputCPUtime=false,
           OutputFlatModelica=false));
     end scConsumer_Translator;
   end Models;
+
+  class Contact
+    extends ModelicaReference.Contact;
+    annotation (Documentation(revisions="<html>
+</html>", info="<html>
+<p><br>This example model is part of the Diode.jl project.</p>
+<p>The provided Modelica model represents a simplified vehicle electrical power supply system. It consists of interconnected components such as a battery source, wiring harness sections, conventional fuses, electronic fuse elements, electrical consumers, and ground connections.</p>
+<p>It is used to demonstrate and validate the translation of compiled Dymola models into readable and executable Julia code.</p>
+<p>For questions or further information, please contact:</p>
+
+Robert Weber<br>
+BMW Group, Munich, Germany <br>
+E-mail: robert.we.weber@bmw.de <br>
+<p>  </p>
+Andreas Hofmann <br>
+Chair for Mechatronics, University of Augsburg, Augsburg, Germany<br>
+E-mail: andreas.hofmann@uni-a.de
+</html>"));
+  end Contact;
   annotation (uses(
       Modelica(version="4.0.0"),
       ENBN_CoSim_Lib_DBS_ModifiedComponents(version="1"),
-      EPNDBS(version="2.1.0 dev")));
+      EPNDBS(version="2.1.0 dev"),
+      ModelicaReference(version="4.0.0")));
 end TranslatorModelle;
