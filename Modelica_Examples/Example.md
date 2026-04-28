@@ -71,12 +71,12 @@ In addition, set the following translation flags:
 These settings are required so that Dymola writes the compiled model information in a form that can be processed by the translator.
 
 <p align="center">
-  <img src="../figures/dymola_translation_settings_2.png" alt="Dymola translation settings" width="700">
+  <img src="../figures/Dymola_translation_settings_2.png" alt="Dymola translation settings" width="700">
   <br>
   <em>Figure: Required Dymola translation settings for the translator workflow.</em>
 </p>
 <p align="center">
-  <img src="../figures/dymola_translation_settings.png" alt="Dymola translation settings" width="700">
+  <img src="../figures/Dymola_translation_settings.png" alt="Dymola translation settings" width="700">
   <br>
   <em>Figure: Required Dymola translation settings for the translator workflow.</em>
 </p>
