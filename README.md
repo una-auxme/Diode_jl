@@ -65,7 +65,7 @@ You can either place these files directly into the repository folder **`Dymola_d
   <em>Figure: Dymola artifacts.</em>
 </p>
 
-3) **Run the translator:** Start the translator from the **parent directory of the repository** and execute the package entry point:
+3) **Run the translator:** Activate the Python virtual environment (see [Setup](#setup)), then start the translator from the **parent directory of the repository** and execute the package entry point:
 ```text
 cd ..
 python -m Diode_jl
@@ -85,7 +85,7 @@ python -m Diode_jl
 
 
 5) **Run the generated Julia model:** The translation produces a Julia file named **`GeneratedModel.jl`** that contains the translated model. Execute `GeneratedModel.jl` in Julia, then run the simulation with:
-`sol = solve_ode()`.
+`sol = solving_ode()`.
 This returns the numerical solution object. To compute the observable quantities from the simulated states, run `df = post_process(sol, parameter_timeline)`.
 
 
@@ -100,6 +100,46 @@ This returns the numerical solution object. To compute the observable quantities
 - **Python:** to run the translator package (recommended: Python 3.10 or newer)
 - **Julia:** to run the generated code (recommended: Julia 1.11.6 or newer)
 - **Julia packages:** the generated code is intended for the Julia SciML ecosystem and typically requires `DifferentialEquations.jl` (recommended: 7.17.0 or newer). The exact imports are listed at the top of `GeneratedModel.jl`.
+
+---
+
+## Setup
+
+### Python environment
+
+Create and activate a virtual environment, then install the required packages:
+
+```text
+cd Diode_jl
+python -m venv .venv
+```
+
+**Windows:**
+```text
+.venv\Scripts\activate
+```
+
+**Linux / macOS:**
+```text
+source .venv/bin/activate
+```
+
+Install dependencies:
+```text
+pip install -r requirements.txt
+```
+
+The environment only needs to be created once. On subsequent uses, activate it with the command above before running the translator.
+
+### Julia environment
+
+The generated `GeneratedModel.jl` ships with a `Project.toml` in the `Generated_Files` directory. Before running the model for the first time, instantiate the environment to download and precompile all required packages:
+
+```text
+julia --project=Generated_Files -e "using Pkg; Pkg.instantiate()"
+```
+
+This step only needs to be run once.
 
 ---
 
