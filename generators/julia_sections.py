@@ -59,7 +59,7 @@ def write_simulation_config(file, data: TranslationData) -> None:
     log_datatypes = {0: "Float64", 1: "Bool", 2: "Int64"}
 
     write_section_header(file, "SimulationConfig")
-    file.write("export SimulationConfig\n\t@kwdef mutable struct SimulationConfig\n")
+    file.write("@kwdef mutable struct SimulationConfig\n")
     for _, line in data.variables_df[
         data.variables_df["Category of variable"].isin(["parameter", "input"])
     ].iterrows():
@@ -68,8 +68,8 @@ def write_simulation_config(file, data: TranslationData) -> None:
         name = wrap_matches_once(name, data.non_state_der_or_vec, 'var"', '"')
         value = line["fixed, free or desired"]
         mask = int(line["Data type of variable"]) & 3
-        file.write(f"\t\t{name}::{log_datatypes[mask]} = {value}\n")
-    file.write("\tend\n")
+        file.write(f"\t{name}::{log_datatypes[mask]} = {value}\n")
+    file.write("end\n")
 
 
 def write_nonlinear_guess_storage(file, data: TranslationData) -> None:
@@ -620,6 +620,7 @@ def write_solver_entry_point(file, data: TranslationData) -> None:
     file.write(
         "\nfunction solving_ode(alg=nothing, cb_settings::CallbackSettings=DEFAULT_CB_SETTINGS)\n"
     )
+    file.write("\talg = isnothing(alg) ? RadauIIA5(autodiff=false) : alg\n")
     file.write("\tglobal par=SimulationConfig()\n")
     file.write("\tp = p_vec()\n")
     file.write("\tu0 = u0_vec()\n")
@@ -630,7 +631,7 @@ def write_solver_entry_point(file, data: TranslationData) -> None:
     file.write("\tprob = ODEProblem(Generated_Circuit!, u0, time_span::Tuple, p)\n")
     file.write("\tcbs = generate_Callbacks(cb_settings)\n")
     file.write(
-        "\tif isnothing(cbs)\n\t\tsol = solve(prob, alg=RadauIIA5(autodiff=false))\n\telse\n\t\tsol = solve(prob, alg=RadauIIA5(autodiff=false), callback=cbs)\n\tend\n"
+        "\tif isnothing(cbs)\n\t\tsol = solve(prob, alg=alg)\n\telse\n\t\tsol = solve(prob, alg=alg, callback=cbs)\n\tend\n"
     )
     file.write("\treturn sol\n")
     file.write("end\n")

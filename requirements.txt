@@ -1,0 +1,4 @@
+colorama==0.4.6
+ordered-set==4.1.0
+pandas==2.3.3
+questionary==2.1.1

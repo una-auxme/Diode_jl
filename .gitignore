@@ -12,6 +12,7 @@ build/
 .venv/
 venv/
 env/
+diode/
 
 # ruff
 .ruff_cache/
