@@ -122,9 +122,12 @@ def write_initialization(file, data: TranslationData) -> None:
 
 def write_parameter_initialization(file, data: TranslationData) -> None:
     write_section_header(file, "Parameter Initialization")
-    n_p = max(
-        int(re.search(r"\d+", v).group(0)) for v in data.parameter_callbacks.values()
-    )
+    slot_numbers = [
+        int(m.group(0))
+        for v in data.parameter_callbacks.values()
+        if (m := re.search(r"\d+", v))
+    ]
+    n_p = max(slot_numbers, default=0)
     t0 = data.simulations_settings["StartTime"]
     init_expr = build_p_init_expressions(data.parameter_callbacks, t0, data.subs)
 
@@ -463,7 +466,7 @@ def write_callback_generation(file, data: TranslationData) -> None:
         file.write(f"\n\tcallbacks = CallbackSet({', '.join(buffer)})\n")
         file.write("\treturn callbacks\n")
     else:
-        file.write("\treturn nothing\n")
+        file.write("\n\treturn nothing\n")
 
     file.write("end\n")
 
