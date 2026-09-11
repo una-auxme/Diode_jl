@@ -39,6 +39,24 @@ from .transforms.text_utils import (
 )
 
 
+def _has_usable_time_span(settings: dict) -> bool:
+    try:
+        return float(settings["StopTime"]) > float(settings["StartTime"])
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def _stop_time_from_dsfinal(path: str, start_time: float) -> float | None:
+    if "dsfinal.txt" not in os.listdir(path):
+        return None
+    try:
+        fallback = dsfinal.extract_simulations_Settings(f"{path}/dsfinal.txt")
+        stop_time = float(fallback["StopTime"])
+    except (KeyError, TypeError, ValueError, OSError):
+        return None
+    return stop_time if stop_time > start_time else None
+
+
 def read_simulation_settings_and_variable_table(path: str):
     simulations_Settings = {}
 
@@ -73,6 +91,16 @@ def read_simulation_settings_and_variable_table(path: str):
             "Should the simulation time settings be taken from 'dsfinal.txt'?"
         ).ask():
             simulations_Settings = prompt_for_time_settings()
+
+    # dsin.txt carries StopTime 0 when the model has no experiment annotation.
+    # Take the StopTime from dsfinal.txt instead - never its StartTime, which
+    # describes a continuation window and would not match the initial values.
+    if simulations_Settings and not _has_usable_time_span(simulations_Settings):
+        stop_time = _stop_time_from_dsfinal(
+            path, float(simulations_Settings["StartTime"])
+        )
+        if stop_time is not None:
+            simulations_Settings["StopTime"] = stop_time
 
     return Variabels_df, simulations_Settings
 
