@@ -1,0 +1,5 @@
+# Simulation data must never be committed.
+# This folder is tracked empty so the translator finds it after cloning;
+# everything placed inside stays local.
+*
+!.gitignore
